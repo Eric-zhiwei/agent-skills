@@ -3,28 +3,31 @@
 Install a single skill from this repository into an agent's skills directory.
 
 .EXAMPLE
-.\scripts\install-skill.ps1 my-skill
+.\scripts\install-skill.ps1 my-skill -Agent codex
 
 .EXAMPLE
-.\scripts\install-skill.ps1 my-skill -Agent claude
-
-.EXAMPLE
-.\scripts\install-skill.ps1 my-skill -Agent cursor
+.\scripts\install-skill.ps1 my-skill -Agent claude -Project
 
 .EXAMPLE
 .\scripts\install-skill.ps1 my-skill -Dest C:\temp\skills -Force
 
 .NOTES
--Agent <name> installs into $<NAME>_HOME/skills, falling back to ~/.<name>/skills.
-That covers CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent. Use -Dest for
-agents that keep skills elsewhere.
+-Agent <name> is required unless -Dest is given: there is no default agent.
+-Global (the default) installs into $<NAME>_HOME/skills, falling back to ~/.<name>/skills.
+That covers CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent.
+-Project installs into ./.<name>/skills under the current directory.
+-Dest takes an explicit skills directory and cannot be combined with -Global/-Project.
 #>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true, Position = 0)]
   [string]$Skill,
 
-  [string]$Agent = 'codex',
+  [string]$Agent,
+
+  [switch]$Global,
+
+  [switch]$Project,
 
   [string]$Dest,
 
@@ -54,18 +57,37 @@ if ($Skill -notmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
   throw "Invalid skill name: $Skill"
 }
 
-$agentInput = $Agent
-$Agent = $Agent.ToLowerInvariant()
-if ($Agent -cnotmatch '^[a-z0-9][a-z0-9._-]*$' -or $Agent -like '*..*') {
-  throw "Invalid agent name: $agentInput (use a name such as codex or claude)"
+if ($Global -and $Project) {
+  throw 'Use either -Global or -Project, not both.'
+}
+if ($Dest -and ($Global -or $Project)) {
+  throw '-Dest cannot be combined with -Global/-Project.'
+}
+if (-not $Dest -and -not $Agent) {
+  throw 'Specify the target: -Agent <name> (with -Global or -Project), or -Dest <dir>.'
+}
+
+if ($Agent) {
+  $agentInput = $Agent
+  $Agent = $Agent.ToLowerInvariant()
+  if ($Agent -cnotmatch '^[a-z0-9][a-z0-9._-]*$' -or $Agent -like '*..*') {
+    throw "Invalid agent name: $agentInput (use a name such as codex or claude)"
+  }
 }
 
 if (-not $Dest) {
-  $agentEnv = (($Agent -replace '[.-]', '_')).ToUpperInvariant() + '_HOME'
-  $agentBase = [System.Environment]::GetEnvironmentVariable($agentEnv)
-  if (-not $agentBase) { $agentBase = Join-Path $HOME ('.' + $Agent) }
-  $Dest = Join-Path $agentBase 'skills'
+  if ($Project) {
+    $Dest = Join-Path (Join-Path (Get-Location).Path ('.' + $Agent)) 'skills'
+  }
+  else {
+    $agentEnv = (($Agent -replace '[.-]', '_')).ToUpperInvariant() + '_HOME'
+    $agentBase = [System.Environment]::GetEnvironmentVariable($agentEnv)
+    if (-not $agentBase) { $agentBase = Join-Path $HOME ('.' + $Agent) }
+    $Dest = Join-Path $agentBase 'skills'
+  }
 }
+
+Write-Host "Installing $Skill into $Dest"
 
 $checkoutRoot = Split-Path -Parent $PSScriptRoot
 $localSkillsRoot = Join-Path $checkoutRoot 'skills'

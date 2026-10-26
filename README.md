@@ -33,70 +33,94 @@ agent-skills/
 
 ## 安装单条 skill
 
-Skill 就是一组文件，装到目标 agent 的 skills 目录即可生效。默认落点：
+Skill 就是一组文件，放到哪个 agent 的 skills 目录，就在哪个 agent 生效。下面三种方式任选。
 
-| Agent | 默认目录 |
-| --- | --- |
-| Codex | `$CODEX_HOME/skills`（默认 `~/.codex/skills`） |
-| 其它 agent | `~/.<agent>/skills`，例如 Claude Code 是 `~/.claude/skills` |
+下面的 `<skill-name>` 是占位符，换成实际 skill 名，例如 `js-module-structure`；尖括号本身不要输入（Windows PowerShell 里 `<` 是保留的重定向符号，写了会直接报语法错误）。
 
-### 方式一：用本仓库的 install-skill（推荐，通用 agent 工具）
+### 方式一：直接下载到当前目录
 
-`scripts/install-skill.sh` / `scripts/install-skill.ps1` 是通用 agent 工具：只认 skill 名和目标目录，不绑定某个具体 agent，也不需要先克隆仓库。
+不碰任何 agent 目录，只把这一条 skill 的文件取到当前目录：
 
 ```bash
 # macOS / Linux / WSL / Git Bash
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name>
-
-# 加 --agent 装到别的 agent：claude、cursor……
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
+curl -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main \
+  | tar -xz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
 ```
 
 ```powershell
-# Windows PowerShell
-iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
-pwsh -File $env:TEMP\install-skill.ps1 <skill-name>
-
-pwsh -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude
+# Windows PowerShell，用系统自带的 curl.exe 和 tar.exe
+curl.exe -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main -o $env:TEMP\agent-skills.tar.gz
+tar.exe -xzf $env:TEMP\agent-skills.tar.gz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
 ```
+
+也可以在浏览器里打开 https://github.com/Eric-zhiwei/agent-skills/tree/main/skills/<skill-name> 手工挑文件。
+
+跑完当前目录下会多出 `<skill-name>/`，要生效就自己把它整个挪进目标 agent 的 skills 目录。不想手动挪，用方式二。
+
+### 方式二：用 install-skill（通用 agent 工具）
+
+`scripts/install-skill.sh` / `scripts/install-skill.ps1` 只认 skill 名和目标目录，不绑定某个具体 agent，也不需要先克隆仓库：它会自己下载，再放到对的位置。脚本**没有默认 agent**，不指定目标就直接报错退出。
+
+两种安装范围：
+
+- **全局安装**（`--global`，默认范围）：装进该 agent 的用户级目录，这台机器上的所有项目都能用。
+- **项目安装**（`--project`）：装进当前工作目录下的 `./.<名字>/skills`，只对这个项目生效。
+
+落点规则：
+
+| 范围 | 落点 | 例子 |
+| --- | --- | --- |
+| 全局 | `$<NAME>_HOME/skills`，环境变量没设就用 `~/.<name>/skills` | `--agent claude` → `~/.claude/skills`；`--agent cursor` → `~/.cursor/skills` |
+| 项目 | 当前目录下的 `./.<name>/skills` | `--agent claude --project` → `./.claude/skills` |
+
+`<NAME>` 的算法是 agent 名转大写、`-` 和 `.` 换成 `_` 再拼 `_HOME`，所以 `claude` 跟随 `CLAUDE_HOME`。不符合这个约定的 agent，用 `--dest` 直接指定目录。
+
+```bash
+# macOS / Linux / WSL / Git Bash
+# 全局安装
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
+
+# 项目安装，只装到当前项目下的 .claude/skills
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude --project
+
+# 直接指定目录
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --dest ./path/to/skills
+```
+
+```powershell
+# Windows PowerShell（系统自带的 powershell.exe 就够，装了 PS 7 才用 pwsh）
+iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
+
+# 全局安装
+powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude
+
+# 项目安装，只装到当前项目下的 .claude/skills
+powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude -Project
+```
+
+下载来的 `.ps1` 带网络标记，会被 RemoteSigned 之类的执行策略挡下，`-ExecutionPolicy Bypass` 只对这一次运行生效；等价做法是先跑一次 `Unblock-File $env:TEMP\install-skill.ps1`。
 
 克隆过仓库的话直接跑本地脚本，参数相同：
 
 ```bash
+bash scripts/install-skill.sh <skill-name> --agent claude --global
 bash scripts/install-skill.sh <skill-name> --agent claude --dest /path/to/skills
 ```
 
 ```powershell
+.\scripts\install-skill.ps1 <skill-name> -Agent claude -Global
 .\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest C:\path\to\skills
 ```
 
-`--agent <名字>` 的解析规则：先看环境变量 `<名字>_HOME`，没设就用 `~/.<名字>`，再拼 `/skills`。所以 `claude` 跟随 `CLAUDE_HOME`、`cursor` 落到 `~/.cursor/skills`；不带 `--agent` 时按 Codex 处理（`$CODEX_HOME/skills`）。目录不符合这个约定的 agent，用 `--dest` 直接指定。
+其它参数：`--ref <ref>` 指定分支或 tag、`--repo <owner/repo>` 换来源仓库、`--force` 覆盖已装版本（会先备份成 `<name>.bak.<时间戳>`）。`--dest` 与 `--global`/`--project` 互斥，给了 `--dest` 就不再推导落点。写错 skill 名时会列出仓库里现有的 skill。
 
-常用参数：`--ref <ref>` 指定分支或 tag、`--repo <owner/repo>` 换来源仓库、`--force` 覆盖已装版本（会先备份成 `<name>.bak.<时间戳>`）。写错 skill 名时会列出仓库里现有的 skill。
-
-### 方式二：在 Codex 里让它自己装
-
-在 Codex 里直接说：
-
-> 从 Eric-zhiwei/agent-skills 安装 `<skill-name>` 这个 skill
-
-Codex 会用自带的官方安装器（`skill-installer`）下载并放进 `$CODEX_HOME/skills`，等价命令：
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo Eric-zhiwei/agent-skills \
-  --path skills/<skill-name>
-```
-
-官方安装器只装 Codex，且遇到同名目录会直接中止；要覆盖已装版本或装到别的 agent，用方式一。
-
-### 方式三：手动只取一个目录
+### 方式三：手动 sparse checkout
 
 ```bash
 git clone --filter=blob:none --sparse https://github.com/Eric-zhiwei/agent-skills.git
 cd agent-skills
 git sparse-checkout set skills/<skill-name>
-cp -R skills/<skill-name> ~/.codex/skills/     # 换 ~/.<agent>/skills 就是装到别的 agent
+cp -R skills/<skill-name> ~/.claude/skills/     # 换成别的 agent 就是 ~/.<agent>/skills
 ```
 
 ## 已收录的 skill
@@ -105,7 +129,7 @@ cp -R skills/<skill-name> ~/.codex/skills/     # 换 ~/.<agent>/skills 就是装
 
 | Skill | 说明 | 安装 |
 | --- | --- | --- |
-| [js-module-structure](skills/js-module-structure) | JS/TS 非后端项目的模块目录与文件分工：`index.ts`、主逻辑、`.config`、`.type`、`.mock`、`.json`、`.test` 各自放什么，以及命名、导出、按需生成和重构归整的做法。适用于工具方法库、组件库，以及前端应用的 api / store / hooks / utils / 组件等任意模块 | `bash scripts/install-skill.sh js-module-structure` |
+| [js-module-structure](skills/js-module-structure) | JS/TS 非后端项目的模块目录与文件分工：`index.ts`、主逻辑、`.config`、`.type`、`.mock`、`.json`、`.test` 各自放什么，以及命名、导出、按需生成和重构归整的做法。适用于工具方法库、组件库，以及前端应用的 api / store / hooks / utils / 组件等任意模块 | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
 
 ## 新增一个 skill
 

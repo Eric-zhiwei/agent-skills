@@ -2,17 +2,20 @@
 # Install a single skill from this repository into an agent's skills directory.
 #
 # Examples:
-#   bash scripts/install-skill.sh my-skill
-#   bash scripts/install-skill.sh my-skill --agent claude
-#   bash scripts/install-skill.sh my-skill --dest ~/.codex/skills --ref v1.0.0
-#   curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- my-skill
+#   bash scripts/install-skill.sh my-skill --agent codex
+#   bash scripts/install-skill.sh my-skill --agent claude --project
+#   bash scripts/install-skill.sh my-skill --dest /path/to/skills --ref v1.0.0
+#   curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- my-skill --agent codex
 
 set -euo pipefail
 
 REPO_SLUG="${AGENT_SKILLS_REPO:-Eric-zhiwei/agent-skills}"
 REF="${AGENT_SKILLS_REF:-main}"
-AGENT="codex"
+AGENT=""
 DEST=""
+SCOPE="global"
+GLOBAL_SET=0
+PROJECT_SET=0
 FORCE=0
 SKILL=""
 
@@ -21,20 +24,24 @@ usage() {
 Install one skill from agent-skills into an agent's skills directory.
 
 Usage:
-  install-skill.sh <skill-name> [options]
+  install-skill.sh <skill-name> --agent <name> [--global | --project] [options]
+  install-skill.sh <skill-name> --dest <dir> [options]
 
 Options:
-  --agent <name>          Target agent, default codex
-  --dest <dir>            Install into an explicit skills directory (wins over --agent)
+  --agent <name>          Target agent: codex, claude, cursor, ... Required unless --dest is given
+  --global                Install into the agent's user-level skills directory (default)
+  --project               Install into ./.<name>/skills in the current project
+  --dest <dir>            Install into an explicit skills directory
   --ref <ref>             Git ref to download from (default: main)
   --repo <owner/repo>     Source repository (default: Eric-zhiwei/agent-skills)
   --force                 Replace an existing installation, keeping a timestamped backup
   -h, --help              Show this help
 
-Agent directories:
-  --agent <name> installs into $<NAME>_HOME/skills, falling back to ~/.<name>/skills.
-  That covers CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent. Use --dest for
-  agents that keep skills elsewhere.
+Directories:
+  --global resolves $<NAME>_HOME/skills, falling back to ~/.<name>/skills. That covers
+  CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent.
+  --project resolves ./.<name>/skills, the per-project convention of agents that have one
+  (Claude Code uses .claude/skills).
 
 Environment:
   AGENT_SKILLS_REPO, AGENT_SKILLS_REF
@@ -50,6 +57,16 @@ while [ "$#" -gt 0 ]; do
     --dest)
       DEST="${2:-}"
       shift 2
+      ;;
+    --global)
+      SCOPE="global"
+      GLOBAL_SET=1
+      shift
+      ;;
+    --project)
+      SCOPE="project"
+      PROJECT_SET=1
+      shift
       ;;
     --ref)
       REF="${2:-}"
@@ -94,21 +111,44 @@ case "$SKILL" in
     ;;
 esac
 
-agent_input="$AGENT"
-AGENT="$(printf '%s' "$AGENT" | tr 'A-Z' 'a-z')"
-case "$AGENT" in
-  "" | [!a-z0-9]* | */* | *\\* | *..* | *[!a-z0-9._-]*)
-    echo "Invalid --agent: $agent_input (use a name such as codex or claude)" >&2
-    exit 2
-    ;;
-esac
+if [ "$GLOBAL_SET" -eq 1 ] && [ "$PROJECT_SET" -eq 1 ]; then
+  echo "Use either --global or --project, not both." >&2
+  exit 2
+fi
+if [ -n "$DEST" ] && { [ "$GLOBAL_SET" -eq 1 ] || [ "$PROJECT_SET" -eq 1 ]; }; then
+  echo "--dest cannot be combined with --global/--project." >&2
+  exit 2
+fi
+
+if [ -z "$DEST" ] && [ -z "$AGENT" ]; then
+  echo "Specify the target: --agent <name> (with --global or --project), or --dest <dir>." >&2
+  usage >&2
+  exit 2
+fi
+
+if [ -n "$AGENT" ]; then
+  agent_input="$AGENT"
+  AGENT="$(printf '%s' "$AGENT" | tr 'A-Z' 'a-z')"
+  case "$AGENT" in
+    "" | [!a-z0-9]* | */* | *\\* | *..* | *[!a-z0-9._-]*)
+      echo "Invalid --agent: $agent_input (use a name such as codex or claude)" >&2
+      exit 2
+      ;;
+  esac
+fi
 
 if [ -z "$DEST" ]; then
-  agent_env="$(printf '%s' "$AGENT" | tr 'a-z' 'A-Z' | tr '.-' '__')_HOME"
-  agent_base="$(printenv "$agent_env" 2>/dev/null || true)"
-  [ -n "$agent_base" ] || agent_base="$HOME/.$AGENT"
-  DEST="$agent_base/skills"
+  if [ "$SCOPE" = "project" ]; then
+    DEST="./.$AGENT/skills"
+  else
+    agent_env="$(printf '%s' "$AGENT" | tr 'a-z' 'A-Z' | tr '.-' '__')_HOME"
+    agent_base="$(printenv "$agent_env" 2>/dev/null || true)"
+    [ -n "$agent_base" ] || agent_base="$HOME/.$AGENT"
+    DEST="$agent_base/skills"
+  fi
 fi
+
+echo "Installing $SKILL into $DEST"
 
 # Resolve the checkout this script lives in, when it is not being piped into bash.
 self_path="${BASH_SOURCE[0]:-}"

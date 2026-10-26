@@ -33,62 +33,86 @@ agent-skills/
 
 ## Installing a single skill
 
-A skill is just a set of files; install it into the target agent's skills directory and it takes effect. Default destinations:
+A skill is just a set of files; put it in an agent's skills directory and it takes effect there. Pick any of the three options below.
 
-| Agent | Default directory |
-| --- | --- |
-| Codex | `$CODEX_HOME/skills` (`~/.codex/skills` by default) |
-| Other agents | `~/.<agent>/skills`, for example Claude Code uses `~/.claude/skills` |
+`<skill-name>` below is a placeholder: replace it with a real skill name such as `js-module-structure`, and do not type the angle brackets.
 
-### Option 1: use install-skill from this repo (recommended, works with any agent)
+### Option 1: download it straight into the current directory
 
-`scripts/install-skill.sh` and `scripts/install-skill.ps1` are generic agent tools: they take a skill name and a target directory, are not tied to any specific agent, and do not require cloning the repository first.
+This touches no agent directory; it just puts the files of that one skill in the current directory:
 
 ```bash
 # macOS / Linux / WSL / Git Bash
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name>
-
-# Add --agent to install into another agent: claude, cursor, ...
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
+curl -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main \
+  | tar -xz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
 ```
 
 ```powershell
-# Windows PowerShell
-iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
-pwsh -File $env:TEMP\install-skill.ps1 <skill-name>
-
-pwsh -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude
+# Windows PowerShell, using the built-in curl.exe and tar.exe
+curl.exe -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main -o $env:TEMP\agent-skills.tar.gz
+tar.exe -xzf $env:TEMP\agent-skills.tar.gz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
 ```
+
+You can also open https://github.com/Eric-zhiwei/agent-skills/tree/main/skills/<skill-name> in a browser and grab files by hand.
+
+You end up with `<skill-name>/` in the current directory; move it into the target agent's skills directory yourself to activate it. If you would rather skip that manual step, use Option 2.
+
+### Option 2: use install-skill (a generic agent tool)
+
+`scripts/install-skill.sh` and `scripts/install-skill.ps1` take only a skill name and a target, are not tied to any specific agent, and do not require cloning the repository: they download the skill and put it in the right place. The scripts have **no default agent**, so an unspecified target exits with an error.
+
+There are two install scopes:
+
+- **Global** (`--global`, the default scope): installs into the agent's user-level directory, available to every project on the machine.
+- **Project** (`--project`): installs into `./.<name>/skills` under the current working directory, affecting only that project.
+
+Destination rules:
+
+| Scope | Destination | Example |
+| --- | --- | --- |
+| Global | `$<NAME>_HOME/skills`, falling back to `~/.<name>/skills` | `--agent claude` → `~/.claude/skills`; `--agent cursor` → `~/.cursor/skills` |
+| Project | `./.<name>/skills` under the current directory | `--agent claude --project` → `./.claude/skills` |
+
+`<NAME>` is the agent name upper-cased with `-` and `.` turned into `_`, plus `_HOME`, so `claude` follows `CLAUDE_HOME`. For agents that do not follow this convention, point at the directory directly with `--dest`.
+
+```bash
+# macOS / Linux / WSL / Git Bash
+# Global install
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
+
+# Project install, only into .claude/skills of the current project
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude --project
+
+# Explicit directory
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --dest ./path/to/skills
+```
+
+```powershell
+# Windows PowerShell (the built-in powershell.exe is enough; use pwsh only if you installed PowerShell 7)
+iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
+
+# Global install
+powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude
+
+# Project install, only into .claude/skills of the current project
+powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude -Project
+```
+
+A downloaded `.ps1` carries the mark-of-the-web, so execution policies such as RemoteSigned block it; `-ExecutionPolicy Bypass` applies to that single run only. The equivalent is to run `Unblock-File $env:TEMP\install-skill.ps1` once.
 
 If you already cloned the repo, run the local script instead; the arguments are the same:
 
 ```bash
+bash scripts/install-skill.sh <skill-name> --agent claude --global
 bash scripts/install-skill.sh <skill-name> --agent claude --dest /path/to/skills
 ```
 
 ```powershell
+.\scripts\install-skill.ps1 <skill-name> -Agent claude -Global
 .\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest C:\path\to\skills
 ```
 
-How `--agent <name>` resolves its destination: it first checks the `<NAME>_HOME` environment variable, falls back to `~/.<name>`, then appends `/skills`. So `claude` follows `CLAUDE_HOME`, and `cursor` lands in `~/.cursor/skills`. Without `--agent`, the script targets Codex (`$CODEX_HOME/skills`). For agents that do not follow this convention, point at the directory directly with `--dest`.
-
-Common options: `--ref <ref>` picks a branch or tag, `--repo <owner/repo>` changes the source repository, and `--force` replaces an existing installation after backing it up to `<name>.bak.<timestamp>`. If you mistype a skill name, the script lists the skills available in the repository.
-
-### Option 2: let Codex install it
-
-Ask Codex directly:
-
-> Install the `<skill-name>` skill from Eric-zhiwei/agent-skills
-
-Codex uses its built-in official installer (`skill-installer`) to download it into `$CODEX_HOME/skills`. The equivalent command is:
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo Eric-zhiwei/agent-skills \
-  --path skills/<skill-name>
-```
-
-The official installer only targets Codex and aborts when a directory of the same name already exists. To replace an existing installation or install into another agent, use Option 1.
+Other options: `--ref <ref>` picks a branch or tag, `--repo <owner/repo>` changes the source repository, and `--force` replaces an existing installation after backing it up to `<name>.bak.<timestamp>`. `--dest` cannot be combined with `--global`/`--project`; once given, no destination is derived. If you mistype a skill name, the script lists the skills available in the repository.
 
 ### Option 3: sparse checkout a single directory
 
@@ -96,7 +120,7 @@ The official installer only targets Codex and aborts when a directory of the sam
 git clone --filter=blob:none --sparse https://github.com/Eric-zhiwei/agent-skills.git
 cd agent-skills
 git sparse-checkout set skills/<skill-name>
-cp -R skills/<skill-name> ~/.codex/skills/     # use ~/.<agent>/skills to install into another agent
+cp -R skills/<skill-name> ~/.claude/skills/     # use ~/.<agent>/skills for any other agent
 ```
 
 ## Available skills
@@ -105,7 +129,7 @@ When you add a skill, register it in this table so users can find it.
 
 | Skill | Description | Install |
 | --- | --- | --- |
-| [js-module-structure](skills/js-module-structure) | Module layout and file roles for non-backend JS/TS projects: what belongs in `index.ts`, the main logic file, `.config`, `.type`, `.mock`, `.json`, and `.test`, plus naming, exports, on-demand generation, and refactoring. Applies to utility libraries, component libraries, and any module in a frontend app such as api / store / hooks / utils / components | `bash scripts/install-skill.sh js-module-structure` |
+| [js-module-structure](skills/js-module-structure) | Module layout and file roles for non-backend JS/TS projects: what belongs in `index.ts`, the main logic file, `.config`, `.type`, `.mock`, `.json`, and `.test`, plus naming, exports, on-demand generation, and refactoring. Applies to utility libraries, component libraries, and any module in a frontend app such as api / store / hooks / utils / components | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
 
 ## Adding a skill
 
