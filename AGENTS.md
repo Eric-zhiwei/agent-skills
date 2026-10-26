@@ -18,11 +18,14 @@
 1. 生成骨架：`node scripts/new-skill.mjs <skill-name>`（按需加 `--resources references,scripts`）。
 2. 编辑 `SKILL.md`：`name` 必须与目录名一致；`description` 写清"做什么 + 什么时候用"。
 3. 校验：`node scripts/validate-skills.mjs`，必须零错误。
-4. 在 `README.md` 的 skills 表格里登记这一条。
+4. 在 `README.md` 和 `README.en.md` 的 skills 表格里登记这一条。
 5. 改过 `scripts/install-skill.*` 时，本地验证一次单条安装：
-   `bash scripts/install-skill.sh <skill-name> --dest <临时目录>`。
+   `bash scripts/install-skill.sh <skill-name> --dest <临时目录>` 和
+   `.\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest <临时目录>`。
 
 ## 安装契约（改动前先确认不会破坏）
 
 - 任何 skill 都必须能通过 `skills/<skill-name>/SKILL.md` 这个路径单独下载。
 - 安装脚本与 Codex 官方安装器都按 `skills/<name>/SKILL.md` 定位 skill，不要挪动这一层结构。
+- `scripts/install-skill.*` 是通用 agent 工具：`--agent <name>` 按 `<NAME>_HOME` 或 `~/.<name>` 解析目标目录，
+  新增 agent 不需要改脚本；`--dest` / `-Dest` 优先级最高。

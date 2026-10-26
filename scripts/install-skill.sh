@@ -18,23 +18,26 @@ SKILL=""
 
 usage() {
   cat <<'EOF'
-Install one skill from agent-skills.
+Install one skill from agent-skills into an agent's skills directory.
 
 Usage:
   install-skill.sh <skill-name> [options]
 
 Options:
-  --agent <codex|claude>  Install into that agent's skills directory (default: codex)
-  --dest <dir>            Install into an explicit directory
+  --agent <name>          Target agent, default codex
+  --dest <dir>            Install into an explicit skills directory (wins over --agent)
   --ref <ref>             Git ref to download from (default: main)
   --repo <owner/repo>     Source repository (default: Eric-zhiwei/agent-skills)
   --force                 Replace an existing installation, keeping a timestamped backup
   -h, --help              Show this help
 
+Agent directories:
+  --agent <name> installs into $<NAME>_HOME/skills, falling back to ~/.<name>/skills.
+  That covers CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent. Use --dest for
+  agents that keep skills elsewhere.
+
 Environment:
   AGENT_SKILLS_REPO, AGENT_SKILLS_REF
-  CODEX_HOME   overrides ~/.codex when --agent codex
-  CLAUDE_HOME  overrides ~/.claude when --agent claude
 EOF
 }
 
@@ -91,15 +94,20 @@ case "$SKILL" in
     ;;
 esac
 
+agent_input="$AGENT"
+AGENT="$(printf '%s' "$AGENT" | tr 'A-Z' 'a-z')"
+case "$AGENT" in
+  "" | [!a-z0-9]* | */* | *\\* | *..* | *[!a-z0-9._-]*)
+    echo "Invalid --agent: $agent_input (use a name such as codex or claude)" >&2
+    exit 2
+    ;;
+esac
+
 if [ -z "$DEST" ]; then
-  case "$AGENT" in
-    codex) DEST="${CODEX_HOME:-$HOME/.codex}/skills" ;;
-    claude) DEST="${CLAUDE_HOME:-$HOME/.claude}/skills" ;;
-    *)
-      echo "Unknown --agent: $AGENT (expected codex or claude)" >&2
-      exit 2
-      ;;
-  esac
+  agent_env="$(printf '%s' "$AGENT" | tr 'a-z' 'A-Z' | tr '.-' '__')_HOME"
+  agent_base="$(printenv "$agent_env" 2>/dev/null || true)"
+  [ -n "$agent_base" ] || agent_base="$HOME/.$AGENT"
+  DEST="$agent_base/skills"
 fi
 
 # Resolve the checkout this script lives in, when it is not being piped into bash.
@@ -108,6 +116,14 @@ checkout_root=""
 if [ -n "$self_path" ] && [ -f "$self_path" ]; then
   checkout_root="$(cd "$(dirname "$self_path")/.." && pwd)"
 fi
+
+# Print the skill names shipped under "<root>/skills".
+list_available_skills() {
+  find "$1/skills" -type f -name SKILL.md 2>/dev/null | sort | while IFS= read -r file; do
+    directory="${file%/SKILL.md}"
+    echo "  - ${directory##*/skills/}" >&2
+  done
+}
 
 tmp_dir=""
 cleanup() {
@@ -126,6 +142,11 @@ if [ -n "$checkout_root" ] && [ -d "$checkout_root/skills" ]; then
   done < <(find "$checkout_root/skills" -type d -name "$SKILL" 2>/dev/null | sort)
   if [ -n "$skill_src" ]; then
     echo "Using local checkout: skills/$SKILL"
+  else
+    echo "Skill '$SKILL' not found in this checkout ($checkout_root/skills)." >&2
+    echo "Available skills:" >&2
+    list_available_skills "$checkout_root"
+    exit 1
   fi
 fi
 
@@ -153,19 +174,19 @@ if [ -z "$skill_src" ]; then
     exit 1
   fi
   tar -xzf "$archive" -C "$tmp_dir"
-  while IFS= read -r candidate; do
-    [ -f "$candidate/SKILL.md" ] || continue
-    skill_src="$candidate"
-    break
-  done < <(find "$tmp_dir" -type d -path "*/skills/$SKILL" 2>/dev/null | sort)
+  repo_root="$(find "$tmp_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
+  if [ -n "$repo_root" ]; then
+    while IFS= read -r candidate; do
+      [ -f "$candidate/SKILL.md" ] || continue
+      skill_src="$candidate"
+      break
+    done < <(find "$repo_root/skills" -type d -name "$SKILL" 2>/dev/null | sort)
+  fi
 
   if [ -z "$skill_src" ]; then
     echo "Skill '$SKILL' not found in $REPO_SLUG@$REF." >&2
     echo "Available skills:" >&2
-    find "$tmp_dir" -type f -name SKILL.md -path "*/skills/*" 2>/dev/null | while IFS= read -r file; do
-      directory="${file%/SKILL.md}"
-      echo "  - ${directory##*/skills/}" >&2
-    done
+    list_available_skills "$repo_root"
     exit 1
   fi
 fi
