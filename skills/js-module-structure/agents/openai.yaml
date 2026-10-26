@@ -1,0 +1,4 @@
+interface:
+  display_name: "JS/TS 模块化目录结构"
+  short_description: "JS/TS 模块目录与文件分工约定"
+  default_prompt: "按 $js-module-structure 的约定，把这个功能整理成模块目录。"

@@ -1,0 +1,13 @@
+# Normalize line endings so shell scripts and markdown stay LF everywhere.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.zip binary
+*.pptx binary
+*.xlsx binary
+*.docx binary

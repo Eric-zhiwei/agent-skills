@@ -1,0 +1,4 @@
+interface:
+  display_name: "{{display-name}}"
+  short_description: "{{short-description}}"
+  default_prompt: "Use ${{skill-name}} to TODO."
