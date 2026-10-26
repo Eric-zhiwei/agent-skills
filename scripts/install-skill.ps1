@@ -9,14 +9,21 @@ Install a single skill from this repository into an agent's skills directory.
 .\scripts\install-skill.ps1 my-skill -Agent claude
 
 .EXAMPLE
+.\scripts\install-skill.ps1 my-skill -Agent cursor
+
+.EXAMPLE
 .\scripts\install-skill.ps1 my-skill -Dest C:\temp\skills -Force
+
+.NOTES
+-Agent <name> installs into $<NAME>_HOME/skills, falling back to ~/.<name>/skills.
+That covers CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent. Use -Dest for
+agents that keep skills elsewhere.
 #>
 [CmdletBinding()]
 param(
   [Parameter(Mandatory = $true, Position = 0)]
   [string]$Skill,
 
-  [ValidateSet('codex', 'claude')]
   [string]$Agent = 'codex',
 
   [string]$Dest,
@@ -30,18 +37,34 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Show-AvailableSkills {
+  param([string]$RepoRoot)
+
+  $skillsRoot = Join-Path $RepoRoot 'skills'
+  if (-not (Test-Path -LiteralPath $skillsRoot)) { return }
+  Get-ChildItem -Path $skillsRoot -Recurse -File -Filter 'SKILL.md' |
+    Sort-Object FullName |
+    ForEach-Object {
+      $relative = $_.FullName.Substring($skillsRoot.Length).TrimStart('\', '/')
+      Write-Host "  - $((($relative -replace '\\', '/') -replace '/SKILL\.md$', ''))"
+    }
+}
+
 if ($Skill -notmatch '^[a-z0-9]+(-[a-z0-9]+)*$') {
   throw "Invalid skill name: $Skill"
 }
 
+$agentInput = $Agent
+$Agent = $Agent.ToLowerInvariant()
+if ($Agent -cnotmatch '^[a-z0-9][a-z0-9._-]*$' -or $Agent -like '*..*') {
+  throw "Invalid agent name: $agentInput (use a name such as codex or claude)"
+}
+
 if (-not $Dest) {
-  if ($Agent -eq 'codex') {
-    $codexHome = if ($env:CODEX_HOME) { $env:CODEX_HOME } else { Join-Path $HOME '.codex' }
-    $Dest = Join-Path $codexHome 'skills'
-  } else {
-    $claudeHome = if ($env:CLAUDE_HOME) { $env:CLAUDE_HOME } else { Join-Path $HOME '.claude' }
-    $Dest = Join-Path $claudeHome 'skills'
-  }
+  $agentEnv = (($Agent -replace '[.-]', '_')).ToUpperInvariant() + '_HOME'
+  $agentBase = [System.Environment]::GetEnvironmentVariable($agentEnv)
+  if (-not $agentBase) { $agentBase = Join-Path $HOME ('.' + $Agent) }
+  $Dest = Join-Path $agentBase 'skills'
 }
 
 $checkoutRoot = Split-Path -Parent $PSScriptRoot
@@ -59,6 +82,12 @@ try {
   if ($localMatch) {
     $source = $localMatch.FullName
     Write-Host "Using local checkout: skills/$Skill"
+  }
+  elseif (Test-Path -LiteralPath $localSkillsRoot) {
+    Write-Warning "Skill '$Skill' not found in this checkout ($localSkillsRoot)."
+    Write-Host 'Available skills:'
+    Show-AvailableSkills -RepoRoot $checkoutRoot
+    throw "Skill not found: $Skill"
   }
   else {
     $tempRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("agent-skills-" + [System.Guid]::NewGuid().ToString('N'))
@@ -79,14 +108,8 @@ try {
     if (-not $match) {
       Write-Warning "Skill '$Skill' not found in $Repo@$Ref."
       Write-Host 'Available skills:'
-      Get-ChildItem -Path $tempRoot -Recurse -File -Filter 'SKILL.md' | ForEach-Object {
-        $relative = $_.FullName.Substring($tempRoot.Length).TrimStart('\', '/') -replace '\\', '/'
-        $index = $relative.IndexOf('/skills/')
-        if ($index -ge 0) {
-          $name = $relative.Substring($index + 8)
-          Write-Host "  - $($name -replace '/SKILL.md$', '')"
-        }
-      }
+      $extracted = Get-ChildItem -Path $tempRoot -Directory | Select-Object -First 1
+      if ($extracted) { Show-AvailableSkills -RepoRoot $extracted.FullName }
       throw "Skill not found: $Skill"
     }
     $source = $match.FullName

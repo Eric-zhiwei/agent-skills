@@ -1,3 +1,5 @@
+[中文](README.md) | [English](README.en.md)
+
 # Agent Skills
 
 可复用的 Agent Skill 集合。每个 skill 是一个独立目录，包含一份 `SKILL.md`，以及它实际需要的脚本、参考资料和资源文件。
@@ -22,8 +24,8 @@ agent-skills/
 ├── scripts/
 │   ├── new-skill.mjs              # 生成 skill 骨架
 │   ├── validate-skills.mjs        # 校验所有 skill
-│   ├── install-skill.sh           # 安装单条 skill（macOS / Linux / WSL / Git Bash）
-│   └── install-skill.ps1          # 安装单条 skill（Windows PowerShell）
+│   ├── install-skill.sh           # 安装单条 skill 到任意 agent（macOS / Linux / WSL / Git Bash）
+│   └── install-skill.ps1          # 安装单条 skill 到任意 agent（Windows PowerShell）
 ├── .github/workflows/             # 提交后自动校验
 ├── AGENTS.md                      # 给 AI agent 的仓库约定
 └── CONTRIBUTING.md                # 新增 skill 的流程
@@ -31,15 +33,54 @@ agent-skills/
 
 ## 安装单条 skill
 
-装到 Codex 默认落在 `$CODEX_HOME/skills`（默认 `~/.codex/skills`），装到 Claude Code 默认落在 `~/.claude/skills`。
+Skill 就是一组文件，装到目标 agent 的 skills 目录即可生效。默认落点：
 
-### 方式一：让 Codex 自己装（推荐）
+| Agent | 默认目录 |
+| --- | --- |
+| Codex | `$CODEX_HOME/skills`（默认 `~/.codex/skills`） |
+| 其它 agent | `~/.<agent>/skills`，例如 Claude Code 是 `~/.claude/skills` |
+
+### 方式一：用本仓库的 install-skill（推荐，通用 agent 工具）
+
+`scripts/install-skill.sh` / `scripts/install-skill.ps1` 是通用 agent 工具：只认 skill 名和目标目录，不绑定某个具体 agent，也不需要先克隆仓库。
+
+```bash
+# macOS / Linux / WSL / Git Bash
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name>
+
+# 加 --agent 装到别的 agent：claude、cursor……
+curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
+```
+
+```powershell
+# Windows PowerShell
+iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
+pwsh -File $env:TEMP\install-skill.ps1 <skill-name>
+
+pwsh -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude
+```
+
+克隆过仓库的话直接跑本地脚本，参数相同：
+
+```bash
+bash scripts/install-skill.sh <skill-name> --agent claude --dest /path/to/skills
+```
+
+```powershell
+.\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest C:\path\to\skills
+```
+
+`--agent <名字>` 的解析规则：先看环境变量 `<名字>_HOME`，没设就用 `~/.<名字>`，再拼 `/skills`。所以 `claude` 跟随 `CLAUDE_HOME`、`cursor` 落到 `~/.cursor/skills`；不带 `--agent` 时按 Codex 处理（`$CODEX_HOME/skills`）。目录不符合这个约定的 agent，用 `--dest` 直接指定。
+
+常用参数：`--ref <ref>` 指定分支或 tag、`--repo <owner/repo>` 换来源仓库、`--force` 覆盖已装版本（会先备份成 `<name>.bak.<时间戳>`）。写错 skill 名时会列出仓库里现有的 skill。
+
+### 方式二：在 Codex 里让它自己装
 
 在 Codex 里直接说：
 
 > 从 Eric-zhiwei/agent-skills 安装 `<skill-name>` 这个 skill
 
-等价命令（用 Codex 自带的安装器）：
+Codex 会用自带的官方安装器（`skill-installer`）下载并放进 `$CODEX_HOME/skills`，等价命令：
 
 ```bash
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
@@ -47,36 +88,7 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/<skill-name>
 ```
 
-### 方式二：用本仓库的安装脚本
-
-克隆本仓库后：
-
-```bash
-# macOS / Linux / WSL / Git Bash
-bash scripts/install-skill.sh <skill-name>              # 装到 ~/.codex/skills
-bash scripts/install-skill.sh <skill-name> --agent claude
-bash scripts/install-skill.sh <skill-name> --dest /path/to/skills
-```
-
-```powershell
-# Windows PowerShell
-.\scripts\install-skill.ps1 <skill-name>
-.\scripts\install-skill.ps1 <skill-name> -Agent claude
-.\scripts\install-skill.ps1 <skill-name> -Dest C:\path\to\skills
-```
-
-没有克隆仓库也可以直接单条安装：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name>
-```
-
-```powershell
-iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
-pwsh -File $env:TEMP\install-skill.ps1 <skill-name>
-```
-
-常用参数：`--ref <ref>` 指定分支或 tag、`--force` 覆盖已装版本（会先备份成 `<name>.bak.<时间戳>`）。
+官方安装器只装 Codex，且遇到同名目录会直接中止；要覆盖已装版本或装到别的 agent，用方式一。
 
 ### 方式三：手动只取一个目录
 
@@ -84,7 +96,7 @@ pwsh -File $env:TEMP\install-skill.ps1 <skill-name>
 git clone --filter=blob:none --sparse https://github.com/Eric-zhiwei/agent-skills.git
 cd agent-skills
 git sparse-checkout set skills/<skill-name>
-cp -R skills/<skill-name> ~/.codex/skills/
+cp -R skills/<skill-name> ~/.codex/skills/     # 换 ~/.<agent>/skills 就是装到别的 agent
 ```
 
 ## 已收录的 skill

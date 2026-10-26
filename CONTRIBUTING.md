@@ -12,8 +12,10 @@ node scripts/validate-skills.mjs
 写完之后：
 
 1. `node scripts/validate-skills.mjs` 零错误。
-2. 在 `README.md` 的表格里加一行。
+2. 在 `README.md` 和 `README.en.md` 的表格里各加一行。
 3. 提交 PR。CI 会跑同一套校验。
+
+`README.en.md` 是 `README.md` 的英文对照版，改 README 时两份一起改，别只改一边。
 
 ## 一条好 skill 的标准
 
@@ -42,8 +44,16 @@ skills/<skill-name>/
 
 ## 改动安装脚本后
 
+`install-skill.sh` 和 `install-skill.ps1` 是对等的两个入口，改动时一起改，并各自验证一次：
+
 ```bash
 bash scripts/install-skill.sh <skill-name> --dest /tmp/agent-skills-test
+bash scripts/install-skill.sh <skill-name> --agent claude --dest /tmp/agent-skills-test2
 ```
 
-确认能装出完整目录，再提交。
+```powershell
+.\scripts\install-skill.ps1 <skill-name> -Dest $env:TEMP\agent-skills-test
+.\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest $env:TEMP\agent-skills-test2
+```
+
+确认 `--agent` / `-Agent` 与 `--dest` / `-Dest` 都还落对目录、装出的目录完整（`SKILL.md` 加该 skill 自己的 `agents/`、`references/`、`scripts/`），再提交。
