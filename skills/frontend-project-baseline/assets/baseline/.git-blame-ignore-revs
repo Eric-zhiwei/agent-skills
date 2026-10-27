@@ -1,0 +1,2 @@
+# 全量格式化、批量重命名这类机械改动，把提交哈希写在这里，git blame 会跳过它们。
+# 本地启用：git config blame.ignoreRevsFile .git-blame-ignore-revs

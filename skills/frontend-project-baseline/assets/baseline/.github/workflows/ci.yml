@@ -1,0 +1,76 @@
+# 只调 package.json 里已有的 script，不在这里发明新命令
+name: CI
+
+on:
+  # 主分支每次推送都跑
+  push:
+    branches: [main] # 换成仓库实际的主分支名
+  # PR 也跑一遍，作为合并前的门禁
+  pull_request:
+
+permissions:
+  contents: read # 默认只读；需要发布时单独给对应 job 提权
+
+concurrency:
+  # 同一分支连推多次时，取消上一次还没跑完的
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CI 不需要安装 git hooks
+  HUSKY: 0
+
+jobs:
+  static:
+    # 四类静态检查各起一个 job，失败时能一眼看出是哪类问题
+    name: ${{ matrix.script }}
+    # 与本地开发保持同一套 Linux 环境
+    runs-on: ubuntu-latest
+    strategy:
+      # 一类检查失败不取消其他 job，一次看全所有问题
+      fail-fast: false
+      # 与 package.json 的 script 名一一对应，加检查项在这里补
+      matrix:
+        script: [lint, format:check, stylelint, typecheck]
+    steps:
+      # 拉代码，主版本跟随官方更新
+      - uses: actions/checkout@v4
+      # pnpm 版本取自 package.json 的 packageManager
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          # 与本地用同一个 Node 版本
+          node-version-file: .nvmrc
+          # 缓存 pnpm store，缓存键含锁文件内容
+          cache: pnpm
+      # 严格按锁文件安装，锁文件和 package.json 不一致时直接失败
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run ${{ matrix.script }}
+
+  test:
+    # 需要覆盖率门槛时在这里加参数
+    runs-on: ubuntu-latest
+    steps:
+      # 准备步骤同 static job：拉代码、装 pnpm、按 .nvmrc 配 Node、按锁文件安装
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run test
+
+  build:
+    # 产物要归档或部署时，在后面接着传 artifact
+    runs-on: ubuntu-latest
+    steps:
+      # 准备步骤同 static job
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build

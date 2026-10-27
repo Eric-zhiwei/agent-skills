@@ -129,7 +129,8 @@ When you add a skill, register it in this table so users can find it.
 
 | Skill | Description | Install |
 | --- | --- | --- |
-| [js-module-structure](skills/js-module-structure) | Module layout and file roles for non-backend JS/TS projects: what belongs in `index.ts`, the main logic file, `.config`, `.type`, `.mock`, `.json`, and `.test`, plus naming, exports, on-demand generation, and refactoring. Applies to utility libraries, component libraries, and any module in a frontend app such as api / store / hooks / utils / components | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
+| [frontend-project-baseline](skills/frontend-project-baseline) | Engineering baseline for frontend projects: runtime and package manager constraints, TypeScript, formatting and static analysis (stylelint included), env templates, commit gates, and required CI checks, with framework-agnostic defaults. Use it to bootstrap a new project, retrofit engineering setup into an existing one, review whether a project meets the baseline, or change existing ESLint / Prettier / tsconfig / stylelint / husky / CI config; includes an inspection script and copy-ready config templates | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
+| [js-module-structure](skills/js-module-structure) | Module layout and file roles for non-backend JS/TS projects: what belongs in `index.ts`, the main logic file, `.config`, `.type`, `.mock`, `.json`, and `.test`, plus naming, exports, on-demand generation, and refactoring. Applies to utility libraries, component libraries, and any module in a frontend app such as api / store / hooks / utils / components, including React, Vue, native mini program, Taro, and uni-app projects | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
 
 ## Adding a skill
 

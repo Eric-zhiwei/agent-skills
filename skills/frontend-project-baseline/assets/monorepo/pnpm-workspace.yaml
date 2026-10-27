@@ -1,0 +1,6 @@
+# 工作区的包目录，按实际结构调整
+packages:
+  - apps/*
+  - packages/*
+
+# 工作区级设置（onlyBuiltDependencies、catalog 等）也写在这个文件里

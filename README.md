@@ -129,7 +129,8 @@ cp -R skills/<skill-name> ~/.claude/skills/     # 换成别的 agent 就是 ~/.<
 
 | Skill | 说明 | 安装 |
 | --- | --- | --- |
-| [js-module-structure](skills/js-module-structure) | JS/TS 非后端项目的模块目录与文件分工：`index.ts`、主逻辑、`.config`、`.type`、`.mock`、`.json`、`.test` 各自放什么，以及命名、导出、按需生成和重构归整的做法。适用于工具方法库、组件库，以及前端应用的 api / store / hooks / utils / 组件等任意模块 | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
+| [frontend-project-baseline](skills/frontend-project-baseline) | 前端项目工程化基线：运行时与包管理器约束、TypeScript、格式化与静态检查（含 stylelint）、环境变量模板、提交门禁、CI 必过项，以及与框架无关的默认选型。新建项目初始化、存量项目补工程化、评审工程化是否达标、改动既有工程化配置时使用；附探测现有配置的脚本和可复制的配置模板 | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
+| [js-module-structure](skills/js-module-structure) | JS/TS 非后端项目的模块目录与文件分工：`index.ts`、主逻辑、`.config`、`.type`、`.mock`、`.json`、`.test` 各自放什么，以及命名、导出、按需生成和重构归整的做法。适用于工具方法库、组件库，以及前端应用（React、Vue、原生小程序、Taro、uni-app）的 api / store / hooks / utils / 组件等任意模块 | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
 
 ## 新增一个 skill
 

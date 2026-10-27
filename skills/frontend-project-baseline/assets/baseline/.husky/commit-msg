@@ -1,0 +1,3 @@
+# 校验提交信息格式，不通过就拒绝提交
+# 用 pnpm exec 调项目里的 commitlint，不依赖全局安装
+pnpm exec commitlint --edit "$1"

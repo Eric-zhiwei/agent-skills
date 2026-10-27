@@ -22,6 +22,8 @@
 5. 改过 `scripts/install-skill.*` 时，本地验证一次单条安装：
    `bash scripts/install-skill.sh <skill-name> --agent claude --dest <临时目录>` 和
    `.\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest <临时目录>`。
+6. skill描述和正文要言简并赅，观点和行为明确，不要冗余文字和重复描述，同时表达的话术要去ai化。
+7. skill之间不应该相互依赖，描述不能有其他的skill内容，每个 skill 都是独立的，不能有任何与 agent 相关的内容，例如 `claude` 相关的配置、指令、示例等。
 
 ## 安装契约（改动前先确认不会破坏）
 

@@ -1,0 +1,8 @@
+{
+  // 打开仓库时提示安装，保证大家用的是同一套检查工具
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "stylelint.vscode-stylelint"
+  ]
+}
