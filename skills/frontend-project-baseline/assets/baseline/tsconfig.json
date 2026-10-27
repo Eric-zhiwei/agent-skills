@@ -1,0 +1,41 @@
+{
+  // 应用主配置。构建脚本、测试、库产物各自拆成 tsconfig.<用途>.json，用 extends 复用这里。
+  "compilerOptions": {
+    // 编译目标：语法和内置 API 按这个版本判断，产物再交给打包器降级
+    "target": "ES2022",
+    // 可用的内置类型：ES 语法库 + 浏览器 DOM；只在 Node 跑的包去掉 DOM
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    // 源码里的模块语法保持 ESNext，降级由打包器负责
+    "module": "ESNext",
+    // 由打包器负责解析模块路径（Vite / webpack / Rspack 都是这套）
+    "moduleResolution": "bundler",
+    // 框架不需要处理 JSX 时删掉这一行
+    "jsx": "preserve",
+
+    // 严格度总开关，一次带上下面大部分检查项。存量项目按分档顺序一档一档开
+    "strict": true,
+    // 下标取值的结果带上 undefined，数组和 Record 取值前必须先判空
+    "noUncheckedIndexedAccess": true,
+    // 未使用的局部变量直接报错
+    "noUnusedLocals": true,
+    // 未使用的函数参数直接报错，不需要的参数就删掉
+    "noUnusedParameters": true,
+    // switch 的 case 必须 break、return 或 throw，避免意外贯穿
+    "noFallthroughCasesInSwitch": true,
+
+    // 类型导入必须写成 import type，转译后不留运行时代码
+    "verbatimModuleSyntax": true,
+    // 每个文件都能单独转译，esbuild / SWC 这类单文件工具才敢加速
+    "isolatedModules": true,
+    // 允许 import JSON，配置和数据文件可以直接引
+    "resolveJsonModule": true,
+    // 让 CommonJS 依赖支持默认导入写法
+    "esModuleInterop": true,
+    // 跳过第三方包的类型检查，检查更快
+    "skipLibCheck": true,
+    // 只做类型检查，产物交给打包器
+    "noEmit": true
+  },
+  // 覆盖全部源码目录；产物目录和依赖不要写进来
+  "include": ["src"]
+}

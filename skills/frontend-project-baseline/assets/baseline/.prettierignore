@@ -1,0 +1,15 @@
+# 依赖与产物
+node_modules
+dist
+build
+coverage
+
+# 锁文件由包管理器维护
+pnpm-lock.yaml
+
+# 压缩产物
+*.min.js
+*.min.css
+
+# 生成代码，要改就改生成器
+# src/generated

@@ -11,9 +11,9 @@ pages/userCard/            # 组件放 components/userCard/
 └── index.config.ts        # 业务常量、默认值
 ```
 
-- **`index.json` 是框架配置文件，不能拿来放数据**。业务数据用 `xx.data.json`，或直接写在 `.ts` 里。
+- **`index.json` 是框架配置文件，不能拿来放数据**。原生小程序不能 import JSON 文件，业务数据写在 `index.ts` 或同名 `.ts` 里，不要放 `xx.data.json`。Taro / uni-app 走构建链，可以正常 import JSON。
 - 目录沿用框架的小驼峰约定（`userCard/`、`orderDetail/`），不要改成大驼峰，否则和 `app.json` 里的路由对不上。
-- 组件目录默认用框架要求的多文件结构，不要为了统一而改成 `UserCard.ts` 单文件。
+- 组件目录默认用框架要求的多文件结构，不要为了统一而改成 `userCard.ts` 单文件。
 - `.mock.ts` / `.type.ts` / `.test.ts` 的规则与 Web 侧一致，按需生成。
 - `pages/` 下的目录是路由入口，改目录名要同步 `app.json`。
 

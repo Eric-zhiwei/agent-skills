@@ -1,0 +1,36 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r run build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "stylelint": "stylelint \"**/*.{css,scss,less}\"",
+    "stylelint:fix": "stylelint \"**/*.{css,scss,less}\" --fix",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r run test",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs,vue,svelte}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,scss,less}": [
+      "stylelint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,html}": [
+      "prettier --write"
+    ]
+  }
+}

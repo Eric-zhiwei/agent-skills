@@ -1,0 +1,3 @@
+# 只处理暂存文件，全量检查留给 CI
+# husky 9 起钩子就是普通 shell 脚本，不需要旧的 husky.sh 头
+pnpm exec lint-staged

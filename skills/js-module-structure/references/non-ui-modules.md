@@ -34,9 +34,9 @@ store/
 ```
 
 - state、action 的类型写进 `xx.type.ts`，包括 store 对外暴露的返回类型。
-- 初始 state 用 `xx.mock.ts` 里的工厂函数返回，重置 store 和写测试都复用它，不要在两处各写一份默认值。
+- 初始 state 用 `xx.mock.ts` 里的工厂函数返回，重置 store 和写测试复用同一份，不要在两处各写一份默认值。
 - 异步 action 调 api 模块，不在 store 里直接写 `fetch` / `axios`：请求细节只有 api 层知道。
-- 派生状态优先用框架自带的 getter / selector，不要在 store 里缓存一份手动同步的副本。
+- 派生状态用框架自带的 getter / selector，不要在 store 里缓存一份手动同步的副本。
 - 测试断言 action 对 state 的影响；请求部分用 api 层的 mock 兜住。
 
 ## hooks / utils 模块
@@ -51,7 +51,7 @@ hooks/
 └── useDebounce.test.ts
 ```
 
-- utils 里只放纯函数，不 import 具体业务模块；一旦发现自己要 import 商店 / 请求，说明它该是 hooks 或 store，不是 utils。
+- utils 里只放纯函数，不 import 具体业务模块；一旦要 import 商店或请求，它就该是 hooks 或 store。
 - `xx.config.ts` 在这类模块里通常放缓存 key 前缀、防抖 / 节流的默认时长、可配置的阈值。
 - 通用性不明确时先放调用方旁边，被第二个模块用到再上提到共享目录。
 

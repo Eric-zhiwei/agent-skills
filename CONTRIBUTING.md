@@ -47,13 +47,19 @@ skills/<skill-name>/
 `install-skill.sh` 和 `install-skill.ps1` 是对等的两个入口，改动时一起改，并各自验证一次：
 
 ```bash
-bash scripts/install-skill.sh <skill-name> --dest /tmp/agent-skills-test
-bash scripts/install-skill.sh <skill-name> --agent claude --dest /tmp/agent-skills-test2
+bash scripts/install-skill.sh <skill-name> --agent codex --dest /tmp/agent-skills-test
+bash scripts/install-skill.sh <skill-name> --agent claude --global
+bash scripts/install-skill.sh <skill-name> --agent claude --project
 ```
 
 ```powershell
-.\scripts\install-skill.ps1 <skill-name> -Dest $env:TEMP\agent-skills-test
-.\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest $env:TEMP\agent-skills-test2
+.\scripts\install-skill.ps1 <skill-name> -Agent codex -Dest $env:TEMP\agent-skills-test
+.\scripts\install-skill.ps1 <skill-name> -Agent claude -Global
+.\scripts\install-skill.ps1 <skill-name> -Agent claude -Project
 ```
 
-确认 `--agent` / `-Agent` 与 `--dest` / `-Dest` 都还落对目录、装出的目录完整（`SKILL.md` 加该 skill 自己的 `agents/`、`references/`、`scripts/`），再提交。
+确认这几点，再提交：
+
+- `--global` / `-Global` 落到 `$<NAME>_HOME/skills`（未设置时 `~/.<name>/skills`），`--project` / `-Project` 落到当前目录的 `./.<name>/skills`。
+- `--dest` / `-Dest` 直接指定目录，与 `--global`/`--project` 互斥；两者都没给时报错退出，而不是装进默认 agent。
+- 装出的目录完整：`SKILL.md` 加该 skill 自己的 `agents/`、`references/`、`scripts/`。
