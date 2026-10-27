@@ -1,0 +1,4 @@
+interface:
+  display_name: "ts-code-lint"
+  short_description: "TS 代码语法校验"
+  default_prompt: "用 $ts-code-lint 校验并修正 TS 代码的语法与类型规范"
