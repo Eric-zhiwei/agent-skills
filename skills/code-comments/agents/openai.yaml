@@ -1,0 +1,4 @@
+interface:
+  display_name: "代码与配置注释写法"
+  short_description: "决定代码和配置里注释写什么、什么时候必须写、什么时候该删"
+  default_prompt: "按 $code-comments 的约定，给这次的代码与配置改动补上该有的注释，并清掉过期注释。"

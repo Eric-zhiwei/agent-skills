@@ -16,3 +16,19 @@ jobs:
           node-version: "20"
       - name: Validate skills
         run: node scripts/validate-skills.mjs
+
+  score:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Score changed skills
+        if: github.event_name == 'pull_request'
+        run: node scripts/score-skills.mjs --changed "${{ github.event.pull_request.base.sha }}"
+      - name: Score all skills
+        if: github.event_name != 'pull_request'
+        run: node scripts/score-skills.mjs
