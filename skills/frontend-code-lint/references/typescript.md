@@ -1,6 +1,6 @@
 # TypeScript 部分
 
-适用于任何 TS 工程；工程里有 `.tsx` 时的 React 写法见 [react.md](react.md)。
+适用于任何 `.ts` 文件；`.tsx` 的 React 写法见 [react.md](react.md)，样式文件见 [css.md](css.md)。
 
 工程已有自己的命名或类型约定时，按工程的来，本文只补没覆盖的部分（见 [SKILL.md](../SKILL.md) 的「先分清工程类型」）。
 

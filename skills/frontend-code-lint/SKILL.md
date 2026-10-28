@@ -1,11 +1,11 @@
 ---
-name: ts-code-lint
-description: TypeScript 代码的语法与类型规范校验，也用于给老工程补类型：写、改、审查 .ts 时检查命名、类型、导入导出、通用写法与 TSLint 迁移；工程里有 .tsx 时再补 Hooks 调用规则、依赖数组、JSX key、Props 声明、副作用写法等 React 写法检查。附 typescript-eslint 的 ESLint 配置、自动修复流程和常见报错的处理方式。老工程已有自己的规则时以工程规则为准。
+name: frontend-code-lint
+description: 前端代码的语法与风格规范校验，也用于给老工程补类型：写、改、审查 .ts 时检查命名、类型、导入导出与 TSLint 迁移；有 .tsx 时补 Hooks、依赖数组、JSX key、Props、副作用等 React 写法；有 .css/.scss/.less 时检查 class 命名、嵌套深度、!important、z-index、单位、颜色变量与 stylelint 配置。附 ESLint / stylelint 配置、自动修复流程和常见报错的改法。老工程已有自己的规则时以工程规则为准。
 ---
 
-# TypeScript 代码语法校验
+# 前端代码语法校验
 
-只管语法和写法层面：类型怎么写、命名怎么起、lint 报错怎么改。不评判业务逻辑对不对，也不绑定某个 UI 框架——React 只是 .tsx 文件的一类写法，单独放在参考文档里。
+只管语法和写法层面：类型怎么写、命名怎么起、样式怎么组织、lint 报错怎么改。不评判业务逻辑，也不绑定具体框架或样式方案——React 是 `.tsx` 的一类写法，CSS 按原生 / 预处理器分开写，都放在参考文档里。
 
 原则：能自动修复的交给 lint，修不了的按对应约定手改；改动超出本次需求范围时先问，不要顺手重排整个文件。
 
@@ -17,7 +17,7 @@ description: TypeScript 代码的语法与类型规范校验，也用于给老�
 
 **工程已有自己的规则时，一律按工程的来**，本文只做兜底：
 
-- 先看现状：`eslint.config.*` / `.eslintrc*` / `tslint.json`、命名风格、目录结构、已有 `interface` / `type` 放在哪。
+- 先看现状：`eslint.config.*` / `.eslintrc*` / `tslint.json` / `.stylelintrc*`、命名风格、目录结构、已有 `interface` / `type` 放在哪、样式是 CSS Modules 还是全局 SCSS。
 - 与本文冲突时，以工程配置和现有写法为准；只补工程没覆盖的部分，不顺手统一命名、重排格式或改目录结构。
 - 补类型时不动业务逻辑、不加新依赖；从 `unknown` 起步逐个收窄，先让 `tsc --noEmit` 通过，再谈收紧严格度。
 - 工程没开 `strict` 时不要求一次性开全量，只保证改动的文件按严格写法写。
@@ -30,13 +30,13 @@ description: TypeScript 代码的语法与类型规范校验，也用于给老�
 
 ## 何时使用
 
-- 新建或修改 `.ts` 文件
+- 新建或修改 `.ts` / `.tsx` / `.css` / `.scss` / `.less` 文件
 - 给老工程补类型：把 `any`、无类型的参数、`@ts-ignore` 逐个收窄
-- 排查 lint 报错，尤其是 `no-explicit-any`、`no-floating-promises`、`no-unused-vars` 这类
-- 配 ESLint 规则，或把老项目的 TSLint 规则迁过来
-- 工程用到 React，要改 `.tsx`：额外读 [references/react.md](references/react.md)
+- 排查 lint 报错，如 `no-explicit-any`、`no-floating-promises`、`no-unused-vars`、`selector-class-pattern`、`max-nesting-depth`
+- 配 ESLint / stylelint 规则，或把老项目的 TSLint 规则迁过来
+- 改 `.tsx` 时额外读 [references/react.md](references/react.md)；改样式文件时读 [references/css.md](references/css.md)
 
-不适用：业务逻辑重构、性能调优（走对应流程）、样式方案选型、纯 JS 项目。
+不适用：业务逻辑重构、性能调优、样式方案选型（换 CSS-in-JS、上 Tailwind 之类）、纯 JS 项目。
 
 ## 执行顺序
 
@@ -44,6 +44,7 @@ description: TypeScript 代码的语法与类型规范校验，也用于给老�
 
 ```bash
 npx eslint . --fix
+npx stylelint "**/*.{css,scss,less}" --fix
 ```
 
 老项目还在用 TSLint 时：`npx tslint -p tsconfig.json --fix`。
@@ -52,7 +53,7 @@ npx eslint . --fix
 3. `npx tsc --noEmit` 确认类型没被改坏。
 4. 按下面的「汇报格式」写结论。
 
-不擅自新装 lint 依赖、升级规则版本或改 `tsconfig` 严格度——这些会牵动全量代码。
+不擅自新装 lint 依赖、升级规则版本或改 `tsconfig` 严格度——这些会牵动全量代码。样式同理：不擅自换 stylelint 预设或引入 Tailwind / CSS-in-JS。
 
 ## 汇报格式
 
@@ -66,18 +67,26 @@ npx eslint . --fix
 
 - 只列实际动过的规则，没问题的规则不用逐条罗列。
 - 手改里超过 10 条时按规则分组汇总，别逐行堆。
-- 有 `eslint-disable` 的地方必须在「需拍板」里单独点出，写明原因。
+- 有 `eslint-disable` / `stylelint-disable` 的地方必须在「需拍板」里单独点出，写明原因。
 
 ## 继续读
 
-- 命名、类型、any 过渡与类型收窄、字符串联合与枚举、导入导出、通用写法、TSLint 迁移：读 [references/typescript.md](references/typescript.md)
-- 工程里有 `.tsx` 时的 React 写法（Hooks、Props、JSX、副作用）：读 [references/react.md](references/react.md)
+按改到的文件类型选读，不用全读：
 
-纯 `.ts` 工程只读 typescript.md。改 `.tsx` 时两份都读：React 组件的命名和类型同样按 typescript.md。
+| 改到的文件 | 读哪份 |
+| --- | --- |
+| 只有 `.ts` | [typescript.md](references/typescript.md) |
+| `.tsx` | typescript.md + [react.md](references/react.md)，React 组件的命名和类型仍按 typescript.md |
+| 只有样式（`.css` / `.scss` / `.less`） | [css.md](references/css.md) |
+| TS + 样式一起改 | 各自对应那份，两份互不重叠 |
+
+- typescript.md：命名、类型、any 过渡与类型收窄、字符串联合与枚举、导入导出、通用写法、TSLint 迁移
+- react.md：Hooks、Props、JSX、副作用、事件命名
+- css.md：class 命名、选择器与优先级、嵌套、单位与颜色、SCSS/Less 约定、stylelint 配置
 
 ## 配置
 
-纯 TS 工程的 ESLint 9 flat config：
+TS 部分用 ESLint 9 flat config：
 
 ```js
 // eslint.config.mjs
@@ -129,6 +138,21 @@ jsxA11y.flatConfigs.recommended,
 }
 ```
 
+样式部分用 stylelint，完整规则见 [references/css.md](references/css.md)：
+
+```js
+// stylelint.config.mjs
+export default {
+  extends: ["stylelint-config-standard", "stylelint-config-standard-scss"],
+  rules: {
+    "selector-class-pattern": "^[a-z][a-zA-Z0-9]*(__[a-z][a-zA-Z0-9]*)?(--[a-z][a-zA-Z0-9]*)?$",
+    "max-nesting-depth": 3,
+    "declaration-no-important": true,
+    "selector-max-id": 0,
+  },
+};
+```
+
 `tsconfig.json` 必须开 `strict: true`。配置改动和代码改动分开提交，方便区分"规则变了"和"代码变了"。
 
 ## 交付前检查
@@ -144,3 +168,10 @@ jsxA11y.flatConfigs.recommended,
 
 - [ ] 没有 `exhaustive-deps` / `rules-of-hooks` 的 disable 注释
 - [ ] 列表都有稳定 `key`，条件渲染没用 `0` 当假值
+
+改过样式文件时额外确认：
+
+- [ ] `npx stylelint "**/*.{css,scss,less}"` 零 error
+- [ ] 新增的 `!important` 都有注释原因，只用于覆盖第三方样式
+- [ ] 嵌套不超过 3 层，没有按表现命名的 class（`red-text`、`mt10`）
+- [ ] 颜色、圆角、z-index 等取自工程的变量 / Token，没有新增魔法数字
