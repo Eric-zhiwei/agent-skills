@@ -24,11 +24,13 @@ agent-skills/
 ├── scripts/
 │   ├── new-skill.mjs              # 生成 skill 骨架
 │   ├── validate-skills.mjs        # 校验所有 skill
+│   ├── score-skills.mjs           # 给 skill 打分（合入门禁，8.5 分）
 │   ├── install-skill.sh           # 安装单条 skill 到任意 agent（macOS / Linux / WSL / Git Bash）
 │   └── install-skill.ps1          # 安装单条 skill 到任意 agent（Windows PowerShell）
-├── .github/workflows/             # 提交后自动校验
+├── .github/workflows/             # 提交后自动校验与评分
 ├── AGENTS.md                      # 给 AI agent 的仓库约定
-└── CONTRIBUTING.md                # 新增 skill 的流程
+├── CONTRIBUTING.md                # 新增 skill 的流程
+└── CONTRIBUTING.en.md             # 新增 skill 的流程（英文）
 ```
 
 ## 安装单条 skill
@@ -125,12 +127,13 @@ cp -R skills/<skill-name> ~/.claude/skills/     # 换成别的 agent 就是 ~/.<
 
 ## 已收录的 skill
 
-新增 skill 后，请在这里登记一行，方便使用者查找。
+新增 skill 后，请在这里登记一行，方便使用者查找。说明列抄该 skill 的 `description`，改了 `description` 就同步这里和 [README.en.md](README.en.md) 的对应行。
 
 | Skill | 说明 | 安装 |
 | --- | --- | --- |
-| [frontend-project-baseline](skills/frontend-project-baseline) | 前端项目工程化基线：运行时与包管理器约束、TypeScript、格式化与静态检查（含 stylelint）、环境变量模板、提交门禁、CI 必过项，以及与框架无关的默认选型。新建项目初始化、存量项目补工程化、评审工程化是否达标、改动既有工程化配置时使用；附探测现有配置的脚本和可复制的配置模板 | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
-| [js-module-structure](skills/js-module-structure) | JS/TS 非后端项目的模块目录与文件分工：`index.ts`、主逻辑、`.config`、`.type`、`.mock`、`.json`、`.test` 各自放什么，以及命名、导出、按需生成和重构归整的做法。适用于工具方法库、组件库，以及前端应用（React、Vue、原生小程序、Taro、uni-app）的 api / store / hooks / utils / 组件等任意模块 | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
+| [frontend-project-baseline](skills/frontend-project-baseline) | 给前端项目建立、补齐或修改工程化基线：包管理器与运行时约束、TypeScript、格式化与静态检查、环境变量模板、提交门禁、CI 必过项。新建项目定技术约束、存量项目接入 lint / 格式化 / 类型检查 / git hooks / CI、评审工程化是否达标，以及改动 ESLint、Prettier、tsconfig、stylelint、husky、CI 等工程化配置时使用。与框架无关，单包与 monorepo 都适用；附配置探测脚本与可复制模板。不负责业务目录与模块职责划分，也不覆盖构建产物优化、版本发布和 monorepo 划分 | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
+| [js-module-structure](skills/js-module-structure) | 规定 JS/TS 非后端项目的模块目录、文件职责与命名导出约定。新建模块，写工具方法库或组件库，给前端应用加 api / store / hooks / utils / 组件 / 页面，或在 React、Vue、原生小程序、Taro、uni-app 项目里拆分与归整目录时使用。只在创建或重组 JS/TS 代码的文件与目录时使用，后端服务端工程不适用 | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
+| [code-comments](skills/code-comments) | 规定注释该写什么、什么时候必须写、什么时候删掉，以及旧注释怎么处置。写或改代码、配置文件时使用，也用于整理遗留注释。不管 lint 规则、注释格式化、API 文档生成和提交信息 | `bash scripts/install-skill.sh code-comments --agent <agent>` |
 
 ## 新增一个 skill
 
@@ -142,7 +145,8 @@ node scripts/new-skill.mjs my-skill --resources references
 
 1. 补全 `skills/my-skill/SKILL.md` 里的 TODO（脚手架故意留了 TODO，校验不通过说明还没写完）。
 2. 校验：`node scripts/validate-skills.mjs`。
-3. 在 README 上方的表格里登记。
+3. 打分：`node scripts/score-skills.mjs skills/my-skill`，低于 8.5 分先按提示改。
+4. 把 `description` 抄进上方表格和 [README.en.md](README.en.md) 的对应行。
 
 更完整的约定见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
@@ -156,6 +160,21 @@ node scripts/validate-skills.mjs skills/foo  # 只校验一个
 校验内容：frontmatter 的 `name`/`description` 是否齐全、`name` 是否与目录名一致、正文是否有未完成的占位内容、是否混入符号链接或附属文档。仓库的 GitHub Actions 会在 push 和 PR 时自动跑同一套校验。
 
 需要 Node 18+，没有其它依赖。
+
+## 评分
+
+```bash
+node scripts/score-skills.mjs                  # 给 skills/ 下全部 skill 打分
+node scripts/score-skills.mjs skills/foo       # 只打分一个
+node scripts/score-skills.mjs --changed main   # 只打分相对 main 有改动的 skill
+node scripts/score-skills.mjs --json           # 机器可读结果
+```
+
+满分 10 分，按六个维度扣减：结构与规范 1.5、description 与触发 1.5、渐进披露与路由 2、可执行性与案例 2、精简与去重 2、独立与可移植 1。每条扣分都带文件、行号和原因，输出里还给出文件数、体积和 token 估算。
+
+低于 8.5 分时退出码为 1，所以可以直接当 CI 门禁用。PR 上只会打分被改动过的 skill，push 到 main 和手动触发时给全部 skill 打分。
+
+要让评分真正拦住合并，需要在 GitHub 分支保护里把 `score` 这个检查设为必须通过。
 
 ## License
 

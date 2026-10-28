@@ -24,11 +24,13 @@ agent-skills/
 ├── scripts/
 │   ├── new-skill.mjs              # Generate a skill skeleton
 │   ├── validate-skills.mjs        # Validate every skill
+│   ├── score-skills.mjs           # Score skills (merge gate, 8.5)
 │   ├── install-skill.sh           # Install one skill into any agent (macOS / Linux / WSL / Git Bash)
 │   └── install-skill.ps1          # Install one skill into any agent (Windows PowerShell)
-├── .github/workflows/             # Validation runs automatically on push and PR
+├── .github/workflows/             # Validation and scoring run automatically on push and PR
 ├── AGENTS.md                      # Repository conventions for AI agents
-└── CONTRIBUTING.md                # How to add a skill
+├── CONTRIBUTING.md                # How to add a skill (Chinese)
+└── CONTRIBUTING.en.md             # How to add a skill
 ```
 
 ## Installing a single skill
@@ -125,12 +127,13 @@ cp -R skills/<skill-name> ~/.claude/skills/     # use ~/.<agent>/skills for any 
 
 ## Available skills
 
-When you add a skill, register it in this table so users can find it.
+When you add a skill, register it in this table so users can find it. The description column copies the skill's own `description`; when you change it, sync this table and the matching row in [README.md](README.md).
 
 | Skill | Description | Install |
 | --- | --- | --- |
-| [frontend-project-baseline](skills/frontend-project-baseline) | Engineering baseline for frontend projects: runtime and package manager constraints, TypeScript, formatting and static analysis (stylelint included), env templates, commit gates, and required CI checks, with framework-agnostic defaults. Use it to bootstrap a new project, retrofit engineering setup into an existing one, review whether a project meets the baseline, or change existing ESLint / Prettier / tsconfig / stylelint / husky / CI config; includes an inspection script and copy-ready config templates | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
-| [js-module-structure](skills/js-module-structure) | Module layout and file roles for non-backend JS/TS projects: what belongs in `index.ts`, the main logic file, `.config`, `.type`, `.mock`, `.json`, and `.test`, plus naming, exports, on-demand generation, and refactoring. Applies to utility libraries, component libraries, and any module in a frontend app such as api / store / hooks / utils / components, including React, Vue, native mini program, Taro, and uni-app projects | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
+| [frontend-project-baseline](skills/frontend-project-baseline) | Build, complete, or change the engineering baseline of a frontend project: package manager and runtime constraints, TypeScript, formatting and static analysis, environment variable templates, commit gates, required CI checks. Use it when setting technical constraints for a new project, retrofitting lint / formatting / type checking / git hooks / CI into an existing one, reviewing whether the setup meets the baseline, or changing ESLint, Prettier, tsconfig, stylelint, husky, or CI config. Framework-agnostic, works for single packages and monorepos, and ships an inspection script with copy-ready templates. It does not cover business directory or module responsibility layout, build output optimization, release versioning, or monorepo splitting | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
+| [js-module-structure](skills/js-module-structure) | Module directory, file role, and named-export conventions for non-backend JS/TS projects. Use it when creating a module, writing a utility or component library, adding api / store / hooks / utils / components / pages to a frontend app, or splitting and reorganizing directories in React, Vue, native mini program, Taro, and uni-app projects. Only when creating or reorganizing JS/TS files and directories; not for backend services | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
+| [code-comments](skills/code-comments) | What comments should say, when one is required, when to delete it, and what to do with stale ones. Use it when writing or changing code or configuration files, and when tidying up legacy comments. It does not cover lint rules, comment formatting, API doc generation, or commit messages | `bash scripts/install-skill.sh code-comments --agent <agent>` |
 
 ## Adding a skill
 
@@ -142,9 +145,10 @@ Then:
 
 1. Fill in the TODOs in `skills/my-skill/SKILL.md` (the scaffold deliberately leaves TODOs; validation fails while they remain).
 2. Validate: `node scripts/validate-skills.mjs`.
-3. Add a row to the table above.
+3. Score it: `node scripts/score-skills.mjs skills/my-skill`, then follow the reported items until it clears 8.5.
+4. Copy the `description` into the table above and the matching row in [README.md](README.md).
 
-The full conventions live in [CONTRIBUTING.md](CONTRIBUTING.md).
+The full conventions live in [CONTRIBUTING.en.md](CONTRIBUTING.en.md).
 
 ## Validation
 
@@ -156,6 +160,21 @@ node scripts/validate-skills.mjs skills/foo  # validate a single skill
 It checks that frontmatter declares `name`/`description`, that `name` matches the directory name, that no placeholder text is left in the body, and that no symlinks or extra documents leaked into a skill directory. GitHub Actions runs the same checks on push and pull requests.
 
 Requires Node 18+; there are no other dependencies.
+
+## Scoring
+
+```bash
+node scripts/score-skills.mjs                  # score every skill under skills/
+node scripts/score-skills.mjs skills/foo       # score one skill
+node scripts/score-skills.mjs --changed main   # score only skills changed against main
+node scripts/score-skills.mjs --json           # machine-readable output
+```
+
+Scores run from 0 to 10 across six dimensions: structure and conventions 1.5, description and triggering 1.5, progressive disclosure and routing 2, actionability and examples 2, conciseness 2, independence and portability 1. Every deduction names the file, line, and reason, and the report also lists file count, size, and estimated tokens.
+
+Anything below 8.5 exits with code 1, so the script works as a CI gate. Pull requests score only the skills they touch; pushes to main and manual runs score everything.
+
+For the score to actually block merges, mark the `score` check as required in the GitHub branch protection rules.
 
 ## License
 

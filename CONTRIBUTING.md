@@ -1,3 +1,5 @@
+[中文](CONTRIBUTING.md) | [English](CONTRIBUTING.en.md)
+
 # 贡献指南
 
 ## 新增一个 skill
@@ -12,10 +14,11 @@ node scripts/validate-skills.mjs
 写完之后：
 
 1. `node scripts/validate-skills.mjs` 零错误。
-2. 在 `README.md` 和 `README.en.md` 的表格里各加一行。
-3. 提交 PR。CI 会跑同一套校验。
+2. `node scripts/score-skills.mjs skills/<skill-name>` 不低于 8.5 分。
+3. 在 `README.md` 和 `README.en.md` 的表格里各加一行，说明列抄 `description`。之后改了 `description`，两处表格要跟着一起改。
+4. 提交 PR。CI 会跑同一套校验和评分。
 
-`README.en.md` 是 `README.md` 的英文对照版，改 README 时两份一起改，别只改一边。
+`README.en.md` 是 `README.md` 的英文对照版，`CONTRIBUTING.en.md` 是本文件的英文对照版。一份改了，成对的另一份跟着一起改，别只改一边。
 
 ## 一条好 skill 的标准
 
@@ -41,6 +44,7 @@ skills/<skill-name>/
 - 名称用小写字母、数字、连字符，≤64 字符，目录名即 skill 名。
 - 默认扁平一层；确实需要分类时才用 `skills/<category>/<skill-name>/`。
 - `skills/<skill-name>/SKILL.md` 这个路径是安装契约，改动前先确认安装脚本和 Codex 官方安装器都还能用。
+- `scripts/` 下的脚本超过约 300 行（或 15 KB）就按 `js-module-structure` 的分工拆开，入口 `scripts/<name>.mjs` 路径保持不变，实现放 `scripts/<name>/`，常量和方法各归各的文件。
 
 ## 改动安装脚本后
 
