@@ -172,10 +172,6 @@ node scripts/score-skills.mjs --json           # 机器可读结果
 
 满分 10 分，按六个维度扣减：结构与规范 1.5、description 与触发 1.5、渐进披露与路由 2、可执行性与案例 2、精简与去重 2、独立与可移植 1。每条扣分都带文件、行号和原因，输出里还给出文件数、体积和 token 估算。
 
-低于 8.5 分时退出码为 1，所以可以直接当 CI 门禁用。PR 上只会打分被改动过的 skill，push 到 main 和手动触发时给全部 skill 打分。
-
-要让评分真正拦住合并，需要在 GitHub 分支保护里把 `score` 这个检查设为必须通过。
-
 ## License
 
 [MIT](LICENSE)
