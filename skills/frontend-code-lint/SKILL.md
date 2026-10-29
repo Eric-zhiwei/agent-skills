@@ -80,7 +80,7 @@ npx stylelint "**/*.{css,scss,less}" --fix
 | 只有样式（`.css` / `.scss` / `.less`） | [css.md](references/css.md) |
 | TS + 样式一起改 | 各自对应那份，两份互不重叠 |
 
-- typescript.md：命名、类型、any 过渡与类型收窄、字符串联合与枚举、导入导出、通用写法、TSLint 迁移
+- typescript.md：命名、类型、any 过渡与类型收窄、类型复杂度与注释要求、字符串联合与枚举、导入导出、通用写法、TSLint 迁移
 - react.md：Hooks、Props、JSX、副作用、事件命名
 - css.md：class 命名、选择器与优先级、嵌套、单位与颜色、SCSS/Less 约定、stylelint 配置
 
@@ -163,6 +163,7 @@ export default {
 - [ ] 没有 `unknown as T` 双断言糊过去的类型
 - [ ] 新增的 `eslint-disable` 都写了原因，并在汇报里登记
 - [ ] 没有未使用的导入，没有注释掉的死代码
+- [ ] 新增类型以可读为先：复杂写法（条件类型、mapped、泛型嵌 3 层、类型推导链）都写了注释说明意图
 
 改过 `.tsx` 时额外确认：
 

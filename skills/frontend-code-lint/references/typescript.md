@@ -110,6 +110,32 @@ default: {
 }
 ```
 
+### 类型复杂度：可读优先
+
+类型的首要目标是**让人看懂**，而不是把类型系统用满。一个要读三遍才明白的类型，哪怕完全正确也算写得不好。
+
+- **能命名就命名**：联合超过 3 个成员、对象超过 5 个字段、出现两次以上的结构，抽成 `interface` / `type` 并起名字，不要到处内联。
+- **泛型嵌套不超过 2 层**：`Promise<Array<Map<string, IUserInfo>>>` 这种抽成别名再注释；三层以上基本没人能读。
+- **业务代码不写高级类型**：条件类型、`infer`、mapped type、递归类型只在工具类型文件里出现。业务里需要时先想能不能用 `interface` + 联合表达，能就别上条件类型。
+- **交叉类型不堆叠**：`A & B & C & D` 超过 3 个就拆成有语义的组合，或改成 `interface extends`。
+- **索引链不连写**：`keyof typeof X[number]["field"]` 这种超过两段就抽中间类型并命名。
+- 判断标准：单行类型超过约 100 字符，或一个类型声明超过 5 行，就考虑拆分或加注释。
+- 遇到 `Type instantiation is excessively deep` 或编辑器提示变慢，说明类型过度复杂，优先简化结构，而不是加 `// @ts-expect-error` 压掉。
+
+**确实需要复杂写法时，必须写注释**，说明三件事：这个类型代表什么、为什么不能用更简单的写法、改动时要注意什么。注释解释意图，不复述结构：
+
+```ts
+// 从接口响应里剥掉通用 envelope，只留业务字段。
+// 后端没提供独立类型，且响应结构会随接口版本变，只能靠条件类型推导；改动 envelope 结构时这里要同步。
+type UnwrapResponse<T> = T extends { data: infer D } ? D : T;
+
+// 订单状态流转图：key 是当前状态，value 是允许流转到的下一批状态。
+// 新增状态时必须同时补这里，否则 isTransitionAllowed 会返回 false。
+type OrderStatusFlow = Record<EOrderStatus, EOrderStatus[]>;
+```
+
+需要注释的典型场景：条件类型 / mapped type / 递归类型、跨三个以上文件的类型推导、与后端约定强耦合的结构、为绕过第三方类型缺陷而写的适配类型。
+
 ## 导入导出
 
 - 只在类型位置使用的导入写 `import type`。
