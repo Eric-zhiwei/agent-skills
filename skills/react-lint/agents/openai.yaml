@@ -1,0 +1,4 @@
+interface:
+  display_name: "react-lint"
+  short_description: "React 组件写法校验"
+  default_prompt: "用 $react-lint 校验并修正 .tsx / .jsx 的 Hooks、Props 与 JSX 写法"
