@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# Install a single skill from this repository into an agent's skills directory.
+# Install one skill from this repository into an agent's skills directory.
 #
 # Examples:
 #   bash scripts/install-skill.sh my-skill --agent codex
 #   bash scripts/install-skill.sh my-skill --agent claude --project
-#   bash scripts/install-skill.sh my-skill --dest /path/to/skills --ref v1.0.0
-#   curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- my-skill --agent codex
+#   bash scripts/install-skill.sh my-skill --dest /path/to/skills
+#   curl -fsSL https://raw.githubusercontent.com/zn-craft/agent-skills/main/scripts/install-skill.sh | bash -s -- my-skill --agent codex
 
 set -euo pipefail
 
-REPO_SLUG="${AGENT_SKILLS_REPO:-Eric-zhiwei/agent-skills}"
-REF="${AGENT_SKILLS_REF:-main}"
+REPO="zn-craft/agent-skills"
+REF="main"
+
 AGENT=""
 DEST=""
-SCOPE="global"
-GLOBAL_SET=0
-PROJECT_SET=0
+GLOBAL=0
+PROJECT=0
 FORCE=0
 SKILL=""
 
@@ -24,27 +24,19 @@ usage() {
 Install one skill from agent-skills into an agent's skills directory.
 
 Usage:
-  install-skill.sh <skill-name> --agent <name> [--global | --project] [options]
-  install-skill.sh <skill-name> --dest <dir> [options]
+  install-skill.sh <skill-name> --agent <name> [--global | --project] [--force]
+  install-skill.sh <skill-name> --dest <dir> [--force]
 
 Options:
-  --agent <name>          Target agent: codex, claude, cursor, ... Required unless --dest is given
-  --global                Install into the agent's user-level skills directory (default)
-  --project               Install into ./.<name>/skills in the current project
-  --dest <dir>            Install into an explicit skills directory
-  --ref <ref>             Git ref to download from (default: main)
-  --repo <owner/repo>     Source repository (default: Eric-zhiwei/agent-skills)
-  --force                 Replace an existing installation, keeping a timestamped backup
-  -h, --help              Show this help
+  --agent <name>      Target agent: codex, claude, cursor, ... Required unless --dest is given
+  --global            Install into the agent's user-level skills directory (default)
+  --project           Install into ./.<name>/skills in the current project
+  --dest <dir>        Install into an explicit skills directory
+  --force             Replace an existing installation, keeping a timestamped backup
+  -h, --help          Show this help
 
-Directories:
-  --global resolves $<NAME>_HOME/skills, falling back to ~/.<name>/skills. That covers
-  CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent.
-  --project resolves ./.<name>/skills, the per-project convention of agents that have one
-  (Claude Code uses .claude/skills).
-
-Environment:
-  AGENT_SKILLS_REPO, AGENT_SKILLS_REF
+--global resolves $<NAME>_HOME/skills, falling back to ~/.<name>/skills; --project
+resolves ./.<name>/skills. --dest and --global/--project cannot be combined.
 EOF
 }
 
@@ -59,22 +51,12 @@ while [ "$#" -gt 0 ]; do
       shift 2
       ;;
     --global)
-      SCOPE="global"
-      GLOBAL_SET=1
+      GLOBAL=1
       shift
       ;;
     --project)
-      SCOPE="project"
-      PROJECT_SET=1
+      PROJECT=1
       shift
-      ;;
-    --ref)
-      REF="${2:-}"
-      shift 2
-      ;;
-    --repo)
-      REPO_SLUG="${2:-}"
-      shift 2
       ;;
     --force)
       FORCE=1
@@ -111,15 +93,14 @@ case "$SKILL" in
     ;;
 esac
 
-if [ "$GLOBAL_SET" -eq 1 ] && [ "$PROJECT_SET" -eq 1 ]; then
+if [ "$GLOBAL" -eq 1 ] && [ "$PROJECT" -eq 1 ]; then
   echo "Use either --global or --project, not both." >&2
   exit 2
 fi
-if [ -n "$DEST" ] && { [ "$GLOBAL_SET" -eq 1 ] || [ "$PROJECT_SET" -eq 1 ]; }; then
+if [ -n "$DEST" ] && { [ "$GLOBAL" -eq 1 ] || [ "$PROJECT" -eq 1 ]; }; then
   echo "--dest cannot be combined with --global/--project." >&2
   exit 2
 fi
-
 if [ -z "$DEST" ] && [ -z "$AGENT" ]; then
   echo "Specify the target: --agent <name> (with --global or --project), or --dest <dir>." >&2
   usage >&2
@@ -138,7 +119,7 @@ if [ -n "$AGENT" ]; then
 fi
 
 if [ -z "$DEST" ]; then
-  if [ "$SCOPE" = "project" ]; then
+  if [ "$PROJECT" -eq 1 ]; then
     DEST="./.$AGENT/skills"
   else
     agent_env="$(printf '%s' "$AGENT" | tr 'a-z' 'A-Z' | tr '.-' '__')_HOME"
@@ -150,20 +131,32 @@ fi
 
 echo "Installing $SKILL into $DEST"
 
-# Resolve the checkout this script lives in, when it is not being piped into bash.
+# First directory named "$SKILL" under "<root>/skills" that holds a SKILL.md.
+find_skill() {
+  { find "$1/skills" -mindepth 1 -type d -name "$SKILL" 2>/dev/null || true; } |
+    sort |
+    while IFS= read -r dir; do
+      if [ -f "$dir/SKILL.md" ]; then
+        printf '%s\n' "$dir"
+        break
+      fi
+    done
+}
+
+list_skills() {
+  { find "$1/skills" -type f -name SKILL.md 2>/dev/null || true; } |
+    sort |
+    while IFS= read -r file; do
+      echo "  - ${file%/SKILL.md}" | sed "s|.*/skills/||" >&2
+    done
+}
+
+# Prefer the checkout this script lives in when it is run locally.
 self_path="${BASH_SOURCE[0]:-}"
 checkout_root=""
 if [ -n "$self_path" ] && [ -f "$self_path" ]; then
   checkout_root="$(cd "$(dirname "$self_path")/.." && pwd)"
 fi
-
-# Print the skill names shipped under "<root>/skills".
-list_available_skills() {
-  find "$1/skills" -type f -name SKILL.md 2>/dev/null | sort | while IFS= read -r file; do
-    directory="${file%/SKILL.md}"
-    echo "  - ${directory##*/skills/}" >&2
-  done
-}
 
 tmp_dir=""
 cleanup() {
@@ -175,17 +168,13 @@ trap cleanup EXIT
 
 skill_src=""
 if [ -n "$checkout_root" ] && [ -d "$checkout_root/skills" ]; then
-  while IFS= read -r candidate; do
-    [ -f "$candidate/SKILL.md" ] || continue
-    skill_src="$candidate"
-    break
-  done < <(find "$checkout_root/skills" -type d -name "$SKILL" 2>/dev/null | sort)
+  skill_src="$(find_skill "$checkout_root")"
   if [ -n "$skill_src" ]; then
     echo "Using local checkout: skills/$SKILL"
   else
     echo "Skill '$SKILL' not found in this checkout ($checkout_root/skills)." >&2
     echo "Available skills:" >&2
-    list_available_skills "$checkout_root"
+    list_skills "$checkout_root"
     exit 1
   fi
 fi
@@ -197,8 +186,8 @@ if [ -z "$skill_src" ]; then
   }
   tmp_dir="$(mktemp -d)"
   archive="$tmp_dir/repo.tar.gz"
-  url="https://codeload.github.com/$REPO_SLUG/tar.gz/refs/heads/$REF"
-  echo "Downloading $REPO_SLUG@$REF ..."
+  url="https://codeload.github.com/$REPO/tar.gz/refs/heads/$REF"
+  echo "Downloading $REPO@$REF ..."
   if command -v curl >/dev/null 2>&1; then
     curl -fsSL "$url" -o "$archive" || {
       echo "Download failed: $url" >&2
@@ -215,18 +204,15 @@ if [ -z "$skill_src" ]; then
   fi
   tar -xzf "$archive" -C "$tmp_dir"
   repo_root="$(find "$tmp_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"
-  if [ -n "$repo_root" ]; then
-    while IFS= read -r candidate; do
-      [ -f "$candidate/SKILL.md" ] || continue
-      skill_src="$candidate"
-      break
-    done < <(find "$repo_root/skills" -type d -name "$SKILL" 2>/dev/null | sort)
+  if [ -z "$repo_root" ]; then
+    echo "Downloaded archive is empty: $url" >&2
+    exit 1
   fi
-
+  skill_src="$(find_skill "$repo_root")"
   if [ -z "$skill_src" ]; then
-    echo "Skill '$SKILL' not found in $REPO_SLUG@$REF." >&2
+    echo "Skill '$SKILL' not found in $REPO@$REF." >&2
     echo "Available skills:" >&2
-    list_available_skills "$repo_root"
+    list_skills "$repo_root"
     exit 1
   fi
 fi

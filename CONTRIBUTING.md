@@ -43,7 +43,7 @@ skills/<skill-name>/
 
 - 名称用小写字母、数字、连字符，≤64 字符，目录名即 skill 名。
 - 默认扁平一层；确实需要分类时才用 `skills/<category>/<skill-name>/`。
-- `skills/<skill-name>/SKILL.md` 这个路径是安装契约，改动前先确认安装脚本和 Codex 官方安装器都还能用。
+- `skills/<skill-name>/SKILL.md` 这个路径是安装契约，改动前先确认 `npx skills add`、安装脚本和 Codex 官方安装器都还能用。
 - `scripts/` 下的脚本超过约 300 行（或 15 KB）就按 `js-module-structure` 的分工拆开，入口 `scripts/<name>.mjs` 路径保持不变，实现放 `scripts/<name>/`，常量和方法各归各的文件。
 
 ## 改动安装脚本后

@@ -35,95 +35,49 @@ agent-skills/
 
 ## Installing a single skill
 
-A skill is just a set of files; put it in an agent's skills directory and it takes effect there. Pick any of the three options below.
+A skill is just a set of files; put it in an agent's skills directory and it takes effect there. Pick either of the two options below.
 
 `<skill-name>` below is a placeholder: replace it with a real skill name such as `js-module-structure`, and do not type the angle brackets.
 
-### Option 1: download it straight into the current directory
+### Option 1: npx skills add (recommended)
 
-This touches no agent directory; it just puts the files of that one skill in the current directory:
+Requires Node 18+. Nothing to clone, and no need to work out where the files go:
 
 ```bash
-# macOS / Linux / WSL / Git Bash
-curl -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main \
-  | tar -xz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
+# interactive: pick a skill, then pick the target agent
+npx skills add zn-craft/agent-skills
+
+# one specific skill; -g installs at the user level
+npx skills add zn-craft/agent-skills --skill <skill-name> -g
+```
+
+Without `--skill`, the CLI lists the repository's skills and lets you pick. `-g` installs into your user-level directory so every project on the machine can use it; omit it to affect only the current project. See `npx skills add --help` for the remaining flags.
+
+### Option 2: script install (install-skill)
+
+Use this when you would rather not install Node, or you need to point at a destination directory yourself. Nothing to clone here either.
+
+```bash
+# macOS / Linux / WSL / Git Bash: install into claude's user-level directory
+curl -fsSL https://raw.githubusercontent.com/zn-craft/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
 ```
 
 ```powershell
-# Windows PowerShell, using the built-in curl.exe and tar.exe
-curl.exe -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main -o $env:TEMP\agent-skills.tar.gz
-tar.exe -xzf $env:TEMP\agent-skills.tar.gz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
-```
-
-You can also open https://github.com/Eric-zhiwei/agent-skills/tree/main/skills/<skill-name> in a browser and grab files by hand.
-
-You end up with `<skill-name>/` in the current directory; move it into the target agent's skills directory yourself to activate it. If you would rather skip that manual step, use Option 2.
-
-### Option 2: use install-skill (a generic agent tool)
-
-`scripts/install-skill.sh` and `scripts/install-skill.ps1` take only a skill name and a target, are not tied to any specific agent, and do not require cloning the repository: they download the skill and put it in the right place. The scripts have **no default agent**, so an unspecified target exits with an error.
-
-There are two install scopes:
-
-- **Global** (`--global`, the default scope): installs into the agent's user-level directory, available to every project on the machine.
-- **Project** (`--project`): installs into `./.<name>/skills` under the current working directory, affecting only that project.
-
-Destination rules:
-
-| Scope | Destination | Example |
-| --- | --- | --- |
-| Global | `$<NAME>_HOME/skills`, falling back to `~/.<name>/skills` | `--agent claude` → `~/.claude/skills`; `--agent cursor` → `~/.cursor/skills` |
-| Project | `./.<name>/skills` under the current directory | `--agent claude --project` → `./.claude/skills` |
-
-`<NAME>` is the agent name upper-cased with `-` and `.` turned into `_`, plus `_HOME`, so `claude` follows `CLAUDE_HOME`. For agents that do not follow this convention, point at the directory directly with `--dest`.
-
-```bash
-# macOS / Linux / WSL / Git Bash
-# Global install
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
-
-# Project install, only into .claude/skills of the current project
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude --project
-
-# Explicit directory
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --dest ./path/to/skills
-```
-
-```powershell
-# Windows PowerShell (the built-in powershell.exe is enough; use pwsh only if you installed PowerShell 7)
-iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
-
-# Global install
+# Windows PowerShell (the built-in powershell.exe is enough)
+iwr https://raw.githubusercontent.com/zn-craft/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
 powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude
-
-# Project install, only into .claude/skills of the current project
-powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude -Project
 ```
 
-A downloaded `.ps1` carries the mark-of-the-web, so execution policies such as RemoteSigned block it; `-ExecutionPolicy Bypass` applies to that single run only. The equivalent is to run `Unblock-File $env:TEMP\install-skill.ps1` once.
+That is the whole flag set:
 
-If you already cloned the repo, run the local script instead; the arguments are the same:
+- `--agent <name>`: the target agent, such as `codex`, `claude`, or `cursor`.
+- `--global` / `--project`: used with `--agent`. Global (the default) lands in `$<NAME>_HOME/skills`, falling back to `~/.<name>/skills`; project lands in `./.<name>/skills` under the current directory.
+- `--dest <dir>`: an explicit destination, mutually exclusive with `--global`/`--project`.
+- `--force`: replaces an existing installation after backing it up to `<name>.bak.<timestamp>`.
 
-```bash
-bash scripts/install-skill.sh <skill-name> --agent claude --global
-bash scripts/install-skill.sh <skill-name> --agent claude --dest /path/to/skills
-```
+With neither `--agent` nor `--dest`, the script exits with an error; there is no default agent. A downloaded `.ps1` carries the mark-of-the-web, so execution policies such as RemoteSigned block it; `-ExecutionPolicy Bypass` applies to that single run only, and running `Unblock-File` once is the equivalent.
 
-```powershell
-.\scripts\install-skill.ps1 <skill-name> -Agent claude -Global
-.\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest C:\path\to\skills
-```
-
-Other options: `--ref <ref>` picks a branch or tag, `--repo <owner/repo>` changes the source repository, and `--force` replaces an existing installation after backing it up to `<name>.bak.<timestamp>`. `--dest` cannot be combined with `--global`/`--project`; once given, no destination is derived. If you mistype a skill name, the script lists the skills available in the repository.
-
-### Option 3: sparse checkout a single directory
-
-```bash
-git clone --filter=blob:none --sparse https://github.com/Eric-zhiwei/agent-skills.git
-cd agent-skills
-git sparse-checkout set skills/<skill-name>
-cp -R skills/<skill-name> ~/.claude/skills/     # use ~/.<agent>/skills for any other agent
-```
+From a clone, run `bash scripts/install-skill.sh <skill-name> --agent claude` (or `.\scripts\install-skill.ps1 <skill-name> -Agent claude`) with the same flags.
 
 ## Available skills
 
@@ -131,9 +85,9 @@ When you add a skill, register it in this table so users can find it. The descri
 
 | Skill | Description | Install |
 | --- | --- | --- |
-| [frontend-project-baseline](skills/frontend-project-baseline) | Build, complete, or change the engineering baseline of a frontend project: package manager and runtime constraints, TypeScript, formatting and static analysis, environment variable templates, commit gates, required CI checks. Use it when setting technical constraints for a new project, retrofitting lint / formatting / type checking / git hooks / CI into an existing one, reviewing whether the setup meets the baseline, or changing ESLint, Prettier, tsconfig, stylelint, husky, or CI config. Framework-agnostic, works for single packages and monorepos, and ships an inspection script with copy-ready templates. It does not cover business directory or module responsibility layout, build output optimization, release versioning, or monorepo splitting | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
-| [js-module-structure](skills/js-module-structure) | Module directory, file role, and named-export conventions for non-backend JS/TS projects. Use it when creating a module, writing a utility or component library, adding api / store / hooks / utils / components / pages to a frontend app, or splitting and reorganizing directories in React, Vue, native mini program, Taro, and uni-app projects. Only when creating or reorganizing JS/TS files and directories; not for backend services | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
-| [code-comments](skills/code-comments) | What comments should say, when one is required, when to delete it, and what to do with stale ones. Use it when writing or changing code or configuration files, and when tidying up legacy comments. It does not cover lint rules, comment formatting, API doc generation, or commit messages | `bash scripts/install-skill.sh code-comments --agent <agent>` |
+| [frontend-project-baseline](skills/frontend-project-baseline) | Build, complete, or change the engineering baseline of a frontend project: package manager and runtime constraints, TypeScript, formatting and static analysis, environment variable templates, commit gates, required CI checks. Use it when setting technical constraints for a new project, retrofitting lint / formatting / type checking / git hooks / CI into an existing one, reviewing whether the setup meets the baseline, or changing ESLint, Prettier, tsconfig, stylelint, husky, or CI config. Framework-agnostic, works for single packages and monorepos, and ships an inspection script with copy-ready templates. It does not cover business directory or module responsibility layout, build output optimization, release versioning, or monorepo splitting | `npx skills add zn-craft/agent-skills --skill frontend-project-baseline` |
+| [js-module-structure](skills/js-module-structure) | Module directory, file role, and named-export conventions for non-backend JS/TS projects. Use it when creating a module, writing a utility or component library, adding api / store / hooks / utils / components / pages to a frontend app, or splitting and reorganizing directories in React, Vue, native mini program, Taro, and uni-app projects. Only when creating or reorganizing JS/TS files and directories; not for backend services | `npx skills add zn-craft/agent-skills --skill js-module-structure` |
+| [code-comments](skills/code-comments) | What comments should say, when one is required, when to delete it, and what to do with stale ones. Use it when writing or changing code or configuration files, and when tidying up legacy comments. It does not cover lint rules, comment formatting, API doc generation, or commit messages | `npx skills add zn-craft/agent-skills --skill code-comments` |
 
 ## Adding a skill
 

@@ -35,95 +35,49 @@ agent-skills/
 
 ## 安装单条 skill
 
-Skill 就是一组文件，放到哪个 agent 的 skills 目录，就在哪个 agent 生效。下面三种方式任选。
+Skill 就是一组文件，放到哪个 agent 的 skills 目录，就在哪个 agent 生效。下面两种方式任选。
 
 下面的 `<skill-name>` 是占位符，换成实际 skill 名，例如 `js-module-structure`；尖括号本身不要输入（Windows PowerShell 里 `<` 是保留的重定向符号，写了会直接报语法错误）。
 
-### 方式一：直接下载到当前目录
+### 方式一：npx skills add（推荐）
 
-不碰任何 agent 目录，只把这一条 skill 的文件取到当前目录：
+需要 Node 18+。不用克隆仓库，也不用自己找落点目录：
 
 ```bash
-# macOS / Linux / WSL / Git Bash
-curl -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main \
-  | tar -xz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
+# 交互式：先挑 skill，再挑目标 agent
+npx skills add zn-craft/agent-skills
+
+# 装指定的一条；-g 表示用户级安装
+npx skills add zn-craft/agent-skills --skill <skill-name> -g
+```
+
+省略 `--skill` 时会把仓库里的 skill 列出来让你挑。`-g` 装进用户级目录，这台机器上的所有项目都能用；不加则只影响当前项目。其它参数看 `npx skills add --help`。
+
+### 方式二：脚本安装（install-skill）
+
+不想装 Node，或者要自己指定落点目录时用这个。脚本同样不需要先克隆仓库。
+
+```bash
+# macOS / Linux / WSL / Git Bash：装到 claude 的用户级目录
+curl -fsSL https://raw.githubusercontent.com/zn-craft/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
 ```
 
 ```powershell
-# Windows PowerShell，用系统自带的 curl.exe 和 tar.exe
-curl.exe -fsSL https://codeload.github.com/Eric-zhiwei/agent-skills/tar.gz/refs/heads/main -o $env:TEMP\agent-skills.tar.gz
-tar.exe -xzf $env:TEMP\agent-skills.tar.gz --strip-components=2 -C . agent-skills-main/skills/<skill-name>
-```
-
-也可以在浏览器里打开 https://github.com/Eric-zhiwei/agent-skills/tree/main/skills/<skill-name> 手工挑文件。
-
-跑完当前目录下会多出 `<skill-name>/`，要生效就自己把它整个挪进目标 agent 的 skills 目录。不想手动挪，用方式二。
-
-### 方式二：用 install-skill（通用 agent 工具）
-
-`scripts/install-skill.sh` / `scripts/install-skill.ps1` 只认 skill 名和目标目录，不绑定某个具体 agent，也不需要先克隆仓库：它会自己下载，再放到对的位置。脚本**没有默认 agent**，不指定目标就直接报错退出。
-
-两种安装范围：
-
-- **全局安装**（`--global`，默认范围）：装进该 agent 的用户级目录，这台机器上的所有项目都能用。
-- **项目安装**（`--project`）：装进当前工作目录下的 `./.<名字>/skills`，只对这个项目生效。
-
-落点规则：
-
-| 范围 | 落点 | 例子 |
-| --- | --- | --- |
-| 全局 | `$<NAME>_HOME/skills`，环境变量没设就用 `~/.<name>/skills` | `--agent claude` → `~/.claude/skills`；`--agent cursor` → `~/.cursor/skills` |
-| 项目 | 当前目录下的 `./.<name>/skills` | `--agent claude --project` → `./.claude/skills` |
-
-`<NAME>` 的算法是 agent 名转大写、`-` 和 `.` 换成 `_` 再拼 `_HOME`，所以 `claude` 跟随 `CLAUDE_HOME`。不符合这个约定的 agent，用 `--dest` 直接指定目录。
-
-```bash
-# macOS / Linux / WSL / Git Bash
-# 全局安装
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude
-
-# 项目安装，只装到当前项目下的 .claude/skills
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --agent claude --project
-
-# 直接指定目录
-curl -fsSL https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.sh | bash -s -- <skill-name> --dest ./path/to/skills
-```
-
-```powershell
-# Windows PowerShell（系统自带的 powershell.exe 就够，装了 PS 7 才用 pwsh）
-iwr https://raw.githubusercontent.com/Eric-zhiwei/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
-
-# 全局安装
+# Windows PowerShell（系统自带的 powershell.exe 就够）
+iwr https://raw.githubusercontent.com/zn-craft/agent-skills/main/scripts/install-skill.ps1 -OutFile $env:TEMP\install-skill.ps1
 powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude
-
-# 项目安装，只装到当前项目下的 .claude/skills
-powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name> -Agent claude -Project
 ```
 
-下载来的 `.ps1` 带网络标记，会被 RemoteSigned 之类的执行策略挡下，`-ExecutionPolicy Bypass` 只对这一次运行生效；等价做法是先跑一次 `Unblock-File $env:TEMP\install-skill.ps1`。
+参数只有这几个：
 
-克隆过仓库的话直接跑本地脚本，参数相同：
+- `--agent <名字>`：目标 agent，例如 `codex`、`claude`、`cursor`。
+- `--global` / `--project`：跟 `--agent` 搭配。全局（默认）装进 `$<NAME>_HOME/skills`，环境变量没设就用 `~/.<name>/skills`；项目装进当前目录下的 `./.<name>/skills`。
+- `--dest <目录>`：直接指定落点，和 `--global`/`--project` 互斥。
+- `--force`：覆盖已装版本，会先备份成 `<name>.bak.<时间戳>`。
 
-```bash
-bash scripts/install-skill.sh <skill-name> --agent claude --global
-bash scripts/install-skill.sh <skill-name> --agent claude --dest /path/to/skills
-```
+`--agent` 和 `--dest` 都不给就直接报错，脚本没有默认 agent。下载来的 `.ps1` 带网络标记，会被 RemoteSigned 之类的执行策略挡下，`-ExecutionPolicy Bypass` 只对这一次运行生效；等价做法是先跑一次 `Unblock-File`。
 
-```powershell
-.\scripts\install-skill.ps1 <skill-name> -Agent claude -Global
-.\scripts\install-skill.ps1 <skill-name> -Agent claude -Dest C:\path\to\skills
-```
-
-其它参数：`--ref <ref>` 指定分支或 tag、`--repo <owner/repo>` 换来源仓库、`--force` 覆盖已装版本（会先备份成 `<name>.bak.<时间戳>`）。`--dest` 与 `--global`/`--project` 互斥，给了 `--dest` 就不再推导落点。写错 skill 名时会列出仓库里现有的 skill。
-
-### 方式三：手动 sparse checkout
-
-```bash
-git clone --filter=blob:none --sparse https://github.com/Eric-zhiwei/agent-skills.git
-cd agent-skills
-git sparse-checkout set skills/<skill-name>
-cp -R skills/<skill-name> ~/.claude/skills/     # 换成别的 agent 就是 ~/.<agent>/skills
-```
+克隆过仓库就直接跑 `bash scripts/install-skill.sh <skill-name> --agent claude`（PowerShell 是 `.\scripts\install-skill.ps1 <skill-name> -Agent claude`），参数一样。
 
 ## 已收录的 skill
 
@@ -131,9 +85,9 @@ cp -R skills/<skill-name> ~/.claude/skills/     # 换成别的 agent 就是 ~/.<
 
 | Skill | 说明 | 安装 |
 | --- | --- | --- |
-| [frontend-project-baseline](skills/frontend-project-baseline) | 给前端项目建立、补齐或修改工程化基线：包管理器与运行时约束、TypeScript、格式化与静态检查、环境变量模板、提交门禁、CI 必过项。新建项目定技术约束、存量项目接入 lint / 格式化 / 类型检查 / git hooks / CI、评审工程化是否达标，以及改动 ESLint、Prettier、tsconfig、stylelint、husky、CI 等工程化配置时使用。与框架无关，单包与 monorepo 都适用；附配置探测脚本与可复制模板。不负责业务目录与模块职责划分，也不覆盖构建产物优化、版本发布和 monorepo 划分 | `bash scripts/install-skill.sh frontend-project-baseline --agent <agent>` |
-| [js-module-structure](skills/js-module-structure) | 规定 JS/TS 非后端项目的模块目录、文件职责与命名导出约定。新建模块，写工具方法库或组件库，给前端应用加 api / store / hooks / utils / 组件 / 页面，或在 React、Vue、原生小程序、Taro、uni-app 项目里拆分与归整目录时使用。只在创建或重组 JS/TS 代码的文件与目录时使用，后端服务端工程不适用 | `bash scripts/install-skill.sh js-module-structure --agent <agent>` |
-| [code-comments](skills/code-comments) | 规定注释该写什么、什么时候必须写、什么时候删掉，以及旧注释怎么处置。写或改代码、配置文件时使用，也用于整理遗留注释。不管 lint 规则、注释格式化、API 文档生成和提交信息 | `bash scripts/install-skill.sh code-comments --agent <agent>` |
+| [frontend-project-baseline](skills/frontend-project-baseline) | 给前端项目建立、补齐或修改工程化基线：包管理器与运行时约束、TypeScript、格式化与静态检查、环境变量模板、提交门禁、CI 必过项。新建项目定技术约束、存量项目接入 lint / 格式化 / 类型检查 / git hooks / CI、评审工程化是否达标，以及改动 ESLint、Prettier、tsconfig、stylelint、husky、CI 等工程化配置时使用。与框架无关，单包与 monorepo 都适用；附配置探测脚本与可复制模板。不负责业务目录与模块职责划分，也不覆盖构建产物优化、版本发布和 monorepo 划分 | `npx skills add zn-craft/agent-skills --skill frontend-project-baseline` |
+| [js-module-structure](skills/js-module-structure) | 规定 JS/TS 非后端项目的模块目录、文件职责与命名导出约定。新建模块，写工具方法库或组件库，给前端应用加 api / store / hooks / utils / 组件 / 页面，或在 React、Vue、原生小程序、Taro、uni-app 项目里拆分与归整目录时使用。只在创建或重组 JS/TS 代码的文件与目录时使用，后端服务端工程不适用 | `npx skills add zn-craft/agent-skills --skill js-module-structure` |
+| [code-comments](skills/code-comments) | 规定注释该写什么、什么时候必须写、什么时候删掉，以及旧注释怎么处置。写或改代码、配置文件时使用，也用于整理遗留注释。不管 lint 规则、注释格式化、API 文档生成和提交信息 | `npx skills add zn-craft/agent-skills --skill code-comments` |
 
 ## 新增一个 skill
 
