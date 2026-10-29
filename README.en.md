@@ -172,10 +172,6 @@ node scripts/score-skills.mjs --json           # machine-readable output
 
 Scores run from 0 to 10 across six dimensions: structure and conventions 1.5, description and triggering 1.5, progressive disclosure and routing 2, actionability and examples 2, conciseness 2, independence and portability 1. Every deduction names the file, line, and reason, and the report also lists file count, size, and estimated tokens.
 
-Anything below 8.5 exits with code 1, so the script works as a CI gate. Pull requests score only the skills they touch; pushes to main and manual runs score everything.
-
-For the score to actually block merges, mark the `score` check as required in the GitHub branch protection rules.
-
 ## License
 
 [MIT](LICENSE)
