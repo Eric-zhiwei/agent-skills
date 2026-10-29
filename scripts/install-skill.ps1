@@ -13,10 +13,8 @@ Install a single skill from this repository into an agent's skills directory.
 
 .NOTES
 -Agent <name> is required unless -Dest is given: there is no default agent.
--Global (the default) installs into $<NAME>_HOME/skills, falling back to ~/.<name>/skills.
-That covers CODEX_HOME, CLAUDE_HOME and any other ~/.<name> agent.
--Project installs into ./.<name>/skills under the current directory.
--Dest takes an explicit skills directory and cannot be combined with -Global/-Project.
+-Global (the default) installs into $<NAME>_HOME/skills, falling back to ~/.<name>/skills;
+-Project installs into ./.<name>/skills. -Dest cannot be combined with -Global/-Project.
 #>
 [CmdletBinding()]
 param(
@@ -31,14 +29,13 @@ param(
 
   [string]$Dest,
 
-  [string]$Ref = $(if ($env:AGENT_SKILLS_REF) { $env:AGENT_SKILLS_REF } else { 'main' }),
-
-  [string]$Repo = $(if ($env:AGENT_SKILLS_REPO) { $env:AGENT_SKILLS_REPO } else { 'Eric-zhiwei/agent-skills' }),
-
   [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
+
+$Repo = 'zn-craft/agent-skills'
+$Ref = 'main'
 
 function Show-AvailableSkills {
   param([string]$RepoRoot)

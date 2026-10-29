@@ -43,7 +43,7 @@ skills/<skill-name>/
 
 - Names use lowercase letters, digits, and hyphens, up to 64 characters; the directory name is the skill name.
 - Flat by default; use `skills/<category>/<skill-name>/` only when classification is genuinely needed.
-- `skills/<skill-name>/SKILL.md` is the install contract: before changing it, confirm that both the install scripts and the official Codex installer still work.
+- `skills/<skill-name>/SKILL.md` is the install contract: before changing it, confirm that `npx skills add`, the install scripts, and the official Codex installer still work.
 - Scripts under `scripts/` that grow past roughly 300 lines (or 15 KB) get split the way `js-module-structure` divides work: the entry point `scripts/<name>.mjs` keeps its path, the implementation moves into `scripts/<name>/`, and constants and methods each get their own file.
 
 ## After changing the install scripts

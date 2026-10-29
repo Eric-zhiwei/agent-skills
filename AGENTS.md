@@ -37,7 +37,7 @@ skill 自带的 `scripts/` 同理按职责拆，入口文件名不要改，SKILL
 ## 安装契约（改动前先确认不会破坏）
 
 - 任何 skill 都必须能通过 `skills/<skill-name>/SKILL.md` 这个路径单独下载。
-- 安装脚本与 Codex 官方安装器都按 `skills/<name>/SKILL.md` 定位 skill，不要挪动这一层结构。
+- `npx skills add`、安装脚本与 Codex 官方安装器都按 `skills/<name>/SKILL.md` 定位 skill，不要挪动这一层结构。
 - `scripts/install-skill.*` 是通用 agent 工具，不绑定具体 agent，也**没有默认 agent**：不给 `--agent` / `-Agent` 又
   不给 `--dest` / `-Dest` 时必须报错退出，不能回退到 Codex 之类的默认目录。
 - 两个安装范围：全局 `--global`（默认）解析 `$<NAME>_HOME/skills`，未设置时退回 `~/.<name>/skills`；
