@@ -88,7 +88,7 @@ powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name
 | [frontend-project-baseline](skills/frontend-project-baseline) | 给前端项目建立、补齐或修改工程化基线：包管理器与运行时约束、TypeScript、格式化与静态检查、环境变量模板、提交门禁、CI 必过项。新建项目定技术约束、存量项目接入 lint / 格式化 / 类型检查 / git hooks / CI、评审工程化是否达标，以及改动 ESLint、Prettier、tsconfig、stylelint、husky、CI 等工程化配置时使用。与框架无关，单包与 monorepo 都适用；附配置探测脚本与可复制模板。不负责业务目录与模块职责划分，也不覆盖构建产物优化、版本发布和 monorepo 划分 | `npx skills add zn-craft/agent-skills --skill frontend-project-baseline` |
 | [js-module-structure](skills/js-module-structure) | 规定 JS/TS 非后端项目的模块目录、文件职责与命名导出约定。新建模块，写工具方法库或组件库，给前端应用加 api / store / hooks / utils / 组件 / 页面，或在 React、Vue、原生小程序、Taro、uni-app 项目里拆分与归整目录时使用。只在创建或重组 JS/TS 代码的文件与目录时使用，后端服务端工程不适用 | `npx skills add zn-craft/agent-skills --skill js-module-structure` |
 | [code-comments](skills/code-comments) | 规定注释该写什么、什么时候必须写、什么时候删掉，以及旧注释怎么处置。写或改代码、配置文件时使用，也用于整理遗留注释。不管 lint 规则、注释格式化、API 文档生成和提交信息 | `npx skills add zn-craft/agent-skills --skill code-comments` |
-| [frontend-code-lint](skills/frontend-code-lint) | 前端代码语法与风格规范校验，也用于给老工程补类型：`.ts` 检查命名、类型、字符串联合与枚举、导入导出、通用写法；`.tsx` 再校验 Hooks 调用规则、依赖数组、JSX key、Props 声明、事件命名；`.css` / `.scss` / `.less` 检查 class 命名、选择器优先级、嵌套深度、`!important`、单位与颜色变量、SCSS/Less 约定。附 ESLint / stylelint 规则对照、flat config、自动修复流程和常见报错的改法。老工程已有自己的规则时以工程为准 | `npx skills add zn-craft/agent-skills --skill frontend-code-lint` |
+| [frontend-code-lint](skills/frontend-code-lint) | 前端代码语法与风格校验：`.ts` 查命名、类型、导入导出和 TSLint 迁移，`.tsx` 查 Hooks、JSX、Props 与副作用，`.css` / `.scss` / `.less` 查命名、嵌套、`!important` 和 stylelint 规则；也用于给老工程补类型。老工程已有规则时以工程为准。不适用于纯 JS、后端工程和业务逻辑重构 | `npx skills add zn-craft/agent-skills --skill frontend-code-lint` |
 
 ## 新增一个 skill
 

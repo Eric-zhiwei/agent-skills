@@ -1,10 +1,10 @@
 # React / TSX 写法
 
-只在工程里有 `.tsx` 时读。这部分是 .tsx 文件里 React 相关的写法补充，不属于 TS 通用规范；命名、类型、导入导出一律按 [typescript.md](typescript.md)，样式按 [css.md](css.md)。
+只在工程里有 `.tsx` 时读。这部分是 .tsx 文件里 React 相关的写法补充，不属于 TS 通用规范；命名、导入导出按 [typescript-style.md](typescript-style.md)，类型按 [typescript-types.md](typescript-types.md)，样式按 [css.md](css.md)。
 
 只管写法层面：Hooks 怎么调、组件和 Props 怎么声明、JSX 怎么写、副作用怎么收尾。
 
-工程已有自己的写法约定时，按工程的来，本文只补没覆盖的部分（见 [SKILL.md](../SKILL.md) 的「先分清工程类型」）。
+工程已有自己的写法约定时，按工程的来，本文只补没覆盖的部分（见 SKILL.md 的「先分清工程类型」）。
 
 ## Hooks 规则
 

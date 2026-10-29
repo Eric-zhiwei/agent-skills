@@ -1,6 +1,6 @@
 ---
 name: frontend-code-lint
-description: 前端代码的语法与风格规范校验，也用于给老工程补类型：写、改、审查 .ts 时检查命名、类型、导入导出与 TSLint 迁移；有 .tsx 时补 Hooks、依赖数组、JSX key、Props、副作用等 React 写法；有 .css/.scss/.less 时检查 class 命名、嵌套深度、!important、z-index、单位、颜色变量与 stylelint 配置。附 ESLint / stylelint 配置、自动修复流程和常见报错的改法。老工程已有自己的规则时以工程规则为准。
+description: 前端代码语法与风格校验：.ts 查命名、类型、导入导出和 TSLint 迁移，.tsx 查 Hooks、JSX、Props 与副作用，.css/.scss/.less 查命名、嵌套、!important 和 stylelint 规则；也用于给老工程补类型。老工程已有规则时以工程为准。不适用于纯 JS、后端工程和业务逻辑重构。
 ---
 
 # 前端代码语法校验
@@ -75,12 +75,14 @@ npx stylelint "**/*.{css,scss,less}" --fix
 
 | 改到的文件 | 读哪份 |
 | --- | --- |
-| 只有 `.ts` | [typescript.md](references/typescript.md) |
-| `.tsx` | typescript.md + [react.md](references/react.md)，React 组件的命名和类型仍按 typescript.md |
+| 只有 `.ts`，改的是命名、导入导出或 lint 报错 | [typescript-style.md](references/typescript-style.md) |
+| 只有 `.ts`，要声明类型、补类型或收窄 `any` | [typescript-types.md](references/typescript-types.md) |
+| `.tsx` | typescript-style.md + typescript-types.md + [react.md](references/react.md)，React 组件的命名和类型仍按前两份 |
 | 只有样式（`.css` / `.scss` / `.less`） | [css.md](references/css.md) |
-| TS + 样式一起改 | 各自对应那份，两份互不重叠 |
+| TS + 样式一起改 | 各自对应那份，互不重叠 |
 
-- typescript.md：命名、类型、any 过渡与类型收窄、类型复杂度与注释要求、字符串联合与枚举、导入导出、通用写法、TSLint 迁移
+- typescript-style.md：命名、导入导出、通用写法、规则对照、常见报错、TSLint 迁移
+- typescript-types.md：类型声明、字符串联合与枚举的选择、any 过渡、类型收窄、类型复杂度与注释要求
 - react.md：Hooks、Props、JSX、副作用、事件命名
 - css.md：class 命名、选择器与优先级、嵌套、单位与颜色、SCSS/Less 约定、stylelint 配置
 
