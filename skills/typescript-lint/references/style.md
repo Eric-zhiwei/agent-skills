@@ -44,6 +44,18 @@
 - `catch` 参数按 `unknown` 处理，不写 `catch (e: any)`；`catch` 里至少记录或重新抛出。
 - 不写空函数、空 `catch`、被注释掉的死代码。
 
+## 类与继承
+
+- 父类只放共性逻辑。某种对象才有的分支写在对应子类的重写方法里，不在父类用 `if (type === "xxx")` 分流。
+- 父类不判断自己有哪些子类。需要差异化行为时用抽象方法或注入的策略，由子类各自实现。
+- 改父类的方法、构造参数或 `protected` 成员之前，先找出所有子类和重写点：`extends` 引用、同名方法重写、`super.xxx()` 调用，逐个确认改动带来的影响。
+- 子类重写保持父类签名；行为与父类不同时写注释说明差异。
+- 类的方法和属性都写访问修饰符，不靠默认 `public`：只在本类用的写 `private`，给子类的写 `protected`，对外 API 才写 `public`。
+- 初始化后不再改的属性加 `readonly`；不依赖实例状态的写 `static` 并配 `public` / `private`。
+- 声明了要给子类用的成员就必须写 `protected`，不写成 `private` 再靠 `as any` 绕过。
+- 只有"是一个"关系才用继承，单纯复用代码用组合。
+- 下面这些不自己拿主意，先问用户：某段逻辑该不该从父类下沉到子类、父类改动会影响哪些子类、子类重写算不算破坏父类约定、继承层次要不要拆。
+
 ## 规则对照
 
 | 反模式 | 规则 |
@@ -55,6 +67,8 @@
 | `@ts-ignore` | `@typescript-eslint/ban-ts-comment` |
 | 类型导入没用 `import type` | `@typescript-eslint/consistent-type-imports` |
 | `switch` 漏分支 | `@typescript-eslint/switch-exhaustiveness-check` |
+| 类成员漏访问修饰符 | `@typescript-eslint/explicit-member-accessibility` |
+| 该用 `readonly` 的成员没写 | `@typescript-eslint/prefer-readonly` |
 | `==` / `var` / 该用 const | `eqeqeq`、`no-var`、`prefer-const` |
 
 ## 常见报错怎么改

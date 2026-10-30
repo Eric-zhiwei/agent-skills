@@ -1,6 +1,6 @@
 ---
 name: react-lint
-description: React 组件的写法校验：写、改、审查 `.tsx` / `.jsx` 时检查 Hooks 调用规则与依赖数组、Props 与事件命名、JSX 的 key 与条件渲染、状态不可变更新、副作用清理，也用于排查 react-hooks 与 JSX 报错。附插件配置、修复流程和常见报错改法。老工程自有一套写法时以工程为准。不负责 TS 类型建模、样式文件和业务逻辑重构。
+description: React 组件的写法与组织校验：写、改、审查 `.tsx` / `.jsx` 时检查 Hooks 规则与依赖数组、Props 与事件命名、JSX key 与条件渲染、状态更新与副作用清理，以及组件拆分、复用抽取、组件间通信和可读性。也用于排查 react-hooks 与 JSX 报错。附插件配置、修复流程与常见报错改法。老工程已有写法时以工程为准。不负责 TS 类型建模、样式文件和需求变更本身。
 ---
 
 # React 代码校验
@@ -24,8 +24,9 @@ description: React 组件的写法校验：写、改、审查 `.tsx` / `.jsx` �
 - 排查 `rules-of-hooks`、`exhaustive-deps`、`jsx-key`、`no-array-index-key` 这类报错
 - 接入或调整 `eslint-plugin-react`、`eslint-plugin-react-hooks`、`eslint-plugin-jsx-a11y`
 - 评审组件写法：Props 设计、副作用整理、列表渲染
+- 拆分过大的组件、判断该不该抽公共组件或 Hook、梳理组件间通信、整理组件可读性
 
-不适用：非 React 框架的组件写法、纯 `.ts` 工具函数、样式文件、业务逻辑重构。
+不适用：非 React 框架的组件写法、纯 `.ts` 工具函数、样式文件、需求本身的改动。
 
 ## 执行顺序
 
@@ -55,7 +56,7 @@ npx eslint "**/*.{jsx,tsx}" --fix
 
 | 改的内容 | 读哪份 |
 | --- | --- |
-| Hooks 规则、组件与 Props、JSX、状态与副作用、报错改法 | [rules.md](references/rules.md) |
+| Hooks 规则、组件与 Props、JSX、状态与副作用、组件拆分、复用与抽取、组件间通信、可读性、报错改法 | [rules.md](references/rules.md) |
 
 只要动的是 `.tsx` / `.jsx`，就读这一份；纯 `.ts` 文件不在本 skill 范围内。
 
@@ -94,4 +95,6 @@ export default [
 - [ ] 列表都有稳定 `key`，没有用数组下标
 - [ ] 条件渲染没有把 `0`、`""` 当假值用
 - [ ] 副作用都有清理函数，异步请求处理了竞态
+- [ ] 触发拆分信号的组件已拆，没有为"以后可能复用"提前抽
+- [ ] 跨层通信走 props / 回调或工程既有状态方案，没有新建模块级可变共享
 - [ ] 新增的 disable 注释都写了原因，并在汇报里登记

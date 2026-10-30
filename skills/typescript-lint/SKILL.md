@@ -61,8 +61,8 @@ npx eslint . --fix
 
 | 改的是 | 读哪份 |
 | --- | --- |
-| 命名、导入导出、通用写法、lint 报错、TSLint 迁移 | [style.md](references/style.md) |
-| 类型声明、字符串联合与枚举选择、`any` 过渡、类型收窄、类型复杂度 | [types.md](references/types.md) |
+| 命名、导入导出、通用写法、类与继承、lint 报错、TSLint 迁移 | [style.md](references/style.md) |
+| 类型声明、类型文件与分组、字符串联合与枚举选择、`any` 过渡、类型收窄、类型复杂度 | [types.md](references/types.md) |
 
 两份都不长，一次只改一处时按上表挑一份即可，不用全读。
 
@@ -87,6 +87,8 @@ export default tseslint.config(
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/consistent-type-imports": "error",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/explicit-member-accessibility": "error",
+      "@typescript-eslint/prefer-readonly": "error",
       eqeqeq: ["error", "smart"],
       "no-var": "error",
       "prefer-const": "error",
@@ -106,3 +108,6 @@ export default tseslint.config(
 - [ ] 新增的 `eslint-disable` 都写了原因，并在汇报里登记
 - [ ] 没有未使用的导入，没有注释掉的死代码
 - [ ] 复杂类型（条件类型、mapped、泛型嵌 3 层）都写了注释
+- [ ] 新增类型集中到 `type.ts` 并按分组顺序排列，实现文件里没有散落的类型
+- [ ] 改过父类时，所有子类与重写点都已确认
+- [ ] 拿不准的继承取舍已列进「需拍板」，没有自行决定
