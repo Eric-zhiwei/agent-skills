@@ -89,7 +89,8 @@ powershell -ExecutionPolicy Bypass -File $env:TEMP\install-skill.ps1 <skill-name
 | [js-module-structure](skills/js-module-structure) | 规定 JS/TS 非后端项目的模块目录、文件职责与命名导出约定。新建模块，写工具方法库或组件库，给前端应用加 api / store / hooks / utils / 组件 / 页面，或在 React、Vue、原生小程序、Taro、uni-app 项目里拆分与归整目录时使用。只在创建或重组 JS/TS 代码的文件与目录时使用，后端服务端工程不适用 | `npx skills add zn-craft/agent-skills --skill js-module-structure` |
 | [code-comments](skills/code-comments) | 规定注释该写什么、什么时候必须写、什么时候删掉，以及旧注释怎么处置。写或改代码、配置文件时使用，也用于整理遗留注释。不管 lint 规则、注释格式化、API 文档生成和提交信息 | `npx skills add zn-craft/agent-skills --skill code-comments` |
 | [style-conventions](skills/style-conventions) | 规定样式该怎么写：类名与作用域、变量与设计 token、选择器特异性、布局与响应式断点、主题与交互状态、行内样式与运行期值、全局样式边界与文件组织。新增或修改组件样式、把设计稿落成 CSS / SCSS / Less，写 CSS Modules、Vue scoped、Tailwind 或小程序 wxss，以及排查样式互相覆盖与魔法值时使用。不负责样式检查工具的配置、构建产物优化和视觉设计评审 | `npx skills add zn-craft/agent-skills --skill style-conventions` |
-| [frontend-code-lint](skills/frontend-code-lint) | 前端代码语法与风格校验：`.ts` 查命名、类型、导入导出和 TSLint 迁移，`.tsx` 查 Hooks、JSX、Props 与副作用，`.css` / `.scss` / `.less` 查命名、嵌套、`!important` 和 stylelint 规则；也用于给老工程补类型。老工程已有规则时以工程为准。不适用于纯 JS、后端工程和业务逻辑重构 | `npx skills add zn-craft/agent-skills --skill frontend-code-lint` |
+| [typescript-lint](skills/typescript-lint) | TypeScript 的语法与写法校验：写、改、审查 `.ts` 时检查类型声明与收窄、字符串联合与枚举的选择、命名规则、导入导出和常见 lint 报错，也用于给存量工程补类型、把 TSLint 迁到 ESLint。附 ESLint 配置、自动修复流程与报错改法。存量工程已有约定时按工程来。不适用于 `.tsx` 的组件写法、样式文件和纯 JS 工程 | `npx skills add zn-craft/agent-skills --skill typescript-lint` |
+| [react-lint](skills/react-lint) | React 组件的写法与组织校验：写、改、审查 `.tsx` / `.jsx` 时检查 Hooks 规则与依赖数组、Props 与事件命名、JSX key 与条件渲染、状态更新与副作用清理，以及组件拆分、复用抽取、组件间通信和可读性。也用于排查 react-hooks 与 JSX 报错。附插件配置、修复流程与常见报错改法。老工程已有写法时以工程为准。不负责 TS 类型建模、样式文件和需求变更本身 | `npx skills add zn-craft/agent-skills --skill react-lint` |
 
 ## 新增一个 skill
 
