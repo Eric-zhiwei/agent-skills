@@ -23,7 +23,9 @@ export const PARAGRAPH_MAX_CHARS = 320;
 export const NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const TEMPLATE_PATTERN = /\{\{\s*[\w-]{1,32}\s*\}\}/u;
 export const TODO_PATTERN = /\bTODO\b|\bFIXME\b/;
-export const AGENT_PATTERN = /\bclaude\b|\bcursor\b|copilot|\.claude[/\\]|CLAUDE\.md/iu;
+export const AGENT_PATTERN = /\bclaude\b|copilot|\.claude[/\\]|CLAUDE\.md/iu;
+// `cursor` 在 CSS 里是属性名（cursor: pointer），只有指编辑器时才按专有名词算。
+export const AGENT_NAME_PATTERN = /\bCursor\b/u;
 export const FORBIDDEN_TOP_LEVEL = /^(readme|changelog|contributing|notes|todo|docs)(\.[a-z0-9]+)?$/i;
 export const ABSOLUTE_PATH_PATTERN = /(?:^|[\s`"'(])(?:[A-Za-z]:\\|\/(?:Users|home)\/)/u;
 export const MARKDOWN_LINK_PATTERN = /\[([^\]]+)\]\(([^)\s]+)\)/g;
