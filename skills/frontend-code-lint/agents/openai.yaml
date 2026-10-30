@@ -1,0 +1,4 @@
+interface:
+  display_name: "frontend-code-lint"
+  short_description: "前端代码语法校验"
+  default_prompt: "用 $frontend-code-lint 校验并修正前端代码的语法与样式规范"
