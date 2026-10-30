@@ -1,0 +1,4 @@
+interface:
+  display_name: "样式编写规范"
+  short_description: "样式的类名、变量、选择器与断点规范"
+  default_prompt: "Use $style-conventions to write or refactor the styles for this component."

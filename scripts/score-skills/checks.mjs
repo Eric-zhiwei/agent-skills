@@ -7,6 +7,7 @@ import { addDeduction } from "./deductions.mjs";
 import {
   ABSOLUTE_PATH_PATTERN,
   AGENT_PATTERN,
+  AGENT_NAME_PATTERN,
   BOUNDARY_PATTERN,
   CONSTRAINT_PATTERN,
   FORBIDDEN_TOP_LEVEL,
@@ -77,7 +78,7 @@ export function checkStructure(ctx, deductions) {
   }
 
   for (const file of ctx.textFiles) {
-    if (!AGENT_PATTERN.test(file.text)) continue;
+    if (!AGENT_PATTERN.test(file.text) && !AGENT_NAME_PATTERN.test(file.text)) continue;
     addDeduction(deductions, 0.4, "出现具体 agent 的专有内容", `${ctx.label}/${file.relative}`, "agent", 0.8);
   }
 }
